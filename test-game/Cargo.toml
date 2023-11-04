@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "main",
+    "lib"
+]
+
+[workspace.dependencies]
+bevy = { version = "0.11.3", features = ["wayland"] }
