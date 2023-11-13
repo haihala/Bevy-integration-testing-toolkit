@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
+leafwing-input-manager = { workspace = true }
+bevy_rapier2d = { workspace = true }
