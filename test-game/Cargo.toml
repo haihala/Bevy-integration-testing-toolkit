@@ -1,9 +1,0 @@
-[workspace]
-resolver = "2"
-members = ["main", "lib"]
-
-[workspace.dependencies]
-bevy = { version = "0.12.0" }
-bevy-inspector-egui = "0.21.0"
-leafwing-input-manager = "0.11.1"
-bevy_rapier2d = { version = "0.23.0", features = ["simd-stable"] }
