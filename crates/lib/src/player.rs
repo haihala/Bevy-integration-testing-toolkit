@@ -8,7 +8,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<Action>::default())
             .add_systems(Startup, spawn_player)
-            .add_systems(Update, jump);
+            .add_systems(Update, player_input);
     }
 }
 
@@ -16,6 +16,7 @@ impl Plugin for PlayerPlugin {
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 enum Action {
     Jump,
+    Move,
 }
 
 #[derive(Component)]
@@ -27,26 +28,41 @@ fn spawn_player(mut commands: Commands) {
             // Stores "which actions are currently pressed"
             action_state: ActionState::default(),
             // Describes how to convert from player inputs into those actions
-            input_map: InputMap::new([(KeyCode::Space, Action::Jump)]),
+            input_map: InputMap::new([(KeyCode::Space, Action::Jump)])
+                .insert(
+                    VirtualDPad {
+                        up: KeyCode::Up.into(),
+                        down: KeyCode::Down.into(),
+                        left: KeyCode::Left.into(),
+                        right: KeyCode::Right.into(),
+                    },
+                    Action::Move,
+                )
+                .build(),
         },
         Player,
-        RigidBody::Dynamic,
-        Velocity::default(),
-        Sleeping::disabled(),
-        Ccd::enabled(),
+        RigidBody::KinematicVelocityBased,
+        KinematicCharacterController::default(),
         Collider::ball(50.0),
         TransformBundle::from(Transform::from_xyz(0.0, 100.0, 0.0)),
     ));
 }
 
-// Query for the `ActionState` component in your game logic systems!
-fn jump(mut commands: Commands, query: Query<(Entity, &ActionState<Action>), With<Player>>) {
-    let (entity, action_state) = query.single();
-    // Each action has a button-like state of its own that you can check
+fn player_input(
+    mut query: Query<(&mut KinematicCharacterController, &ActionState<Action>), With<Player>>,
+    mut jump_shift: Local<f32>,
+) {
+    let (mut character_controller, action_state) = query.single_mut();
+
     if action_state.just_pressed(Action::Jump) {
-        commands.entity(entity).insert(ExternalImpulse {
-            impulse: Vec2::new(0.0, 100.0),
-            ..Default::default()
-        });
+        *jump_shift = 20.0;
     }
+
+    // Gravity
+    *jump_shift -= 1.0;
+
+    character_controller.translation = Some(Vec2::new(
+        action_state.axis_pair(Action::Move).unwrap().x() * 10.0,
+        *jump_shift,
+    ));
 }
