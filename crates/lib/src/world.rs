@@ -22,8 +22,8 @@ fn setup_graphics(mut commands: Commands) {
 }
 
 fn setup_physics(mut commands: Commands) {
-    /* Create the ground. */
     commands.spawn((
+        Name::new("Ground"),
         Collider::cuboid(800.0, 50.0),
         TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)),
     ));

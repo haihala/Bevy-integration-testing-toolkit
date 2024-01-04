@@ -43,6 +43,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .build(),
         },
         Player,
+        Name::new("Player"),
         RigidBody::KinematicVelocityBased,
         KinematicCharacterController::default(),
         Collider::ball(50.0),
