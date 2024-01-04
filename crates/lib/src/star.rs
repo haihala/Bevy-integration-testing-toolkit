@@ -12,6 +12,9 @@ impl Plugin for StarPlugin {
     }
 }
 
+#[derive(Component, Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, DerefMut)]
+struct Points(usize);
+
 #[derive(Component)]
 struct Star;
 
@@ -46,6 +49,19 @@ fn spawn_star(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ));
             }
         });
+
+    commands.spawn((
+        TextBundle::from_sections([TextSection::new(
+            "0",
+            TextStyle {
+                font_size: 60.0,
+                color: Color::WHITE,
+                // If no font is specified, the default font (a minimal subset of FiraMono) will be used.
+                ..default()
+            },
+        )]),
+        Points(0),
+    ));
 }
 
 fn spin_star(time: Res<Time>, mut query: Query<&mut Transform, With<Star>>) {
@@ -67,6 +83,7 @@ fn detect_collisions(
     mut stars: Query<&mut Transform, (With<Star>, Without<StarSpawnPoint>)>,
     spawn_points: Query<&mut Transform, (With<StarSpawnPoint>, Without<Star>)>,
     cooldown: Query<&RespawnCooldown>,
+    mut points: Query<(&mut Text, &mut Points)>,
 ) {
     if !cooldown.is_empty() {
         return;
@@ -97,6 +114,9 @@ fn detect_collisions(
             .unwrap();
 
         star_tf.translation = furtherst_spawn_point.translation;
+        let (mut text, mut points) = points.single_mut();
+        points.0 += 1;
+        text.sections[0].value = points.0.to_string();
         return;
     }
 }
