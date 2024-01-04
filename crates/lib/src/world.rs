@@ -15,13 +15,16 @@ impl Plugin for PhysicsPlugin {
 
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        transform: Transform::from_xyz(0.0, 200.0, 0.0),
+        ..default()
+    });
 }
 
 fn setup_physics(mut commands: Commands) {
     /* Create the ground. */
     commands.spawn((
-        Collider::cuboid(500.0, 50.0),
+        Collider::cuboid(800.0, 50.0),
         TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)),
     ));
 }
