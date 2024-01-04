@@ -22,7 +22,7 @@ enum Action {
 #[derive(Component)]
 struct Player;
 
-fn spawn_player(mut commands: Commands) {
+fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         InputManagerBundle::<Action> {
             // Stores "which actions are currently pressed"
@@ -44,7 +44,15 @@ fn spawn_player(mut commands: Commands) {
         RigidBody::KinematicVelocityBased,
         KinematicCharacterController::default(),
         Collider::ball(50.0),
-        TransformBundle::from(Transform::from_xyz(0.0, 100.0, 0.0)),
+        SpriteBundle {
+            texture: asset_server.load("player.png"),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(100.0, 100.0)),
+                ..default()
+            },
+            transform: Transform::from_xyz(0.0, 100.0, 0.0),
+            ..default()
+        },
     ));
 }
 
