@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 
+use crate::assets::ReusedAssets;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -57,13 +59,19 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn player_input(
+    mut commands: Commands,
     mut query: Query<(&mut KinematicCharacterController, &ActionState<Action>), With<Player>>,
     mut jump_shift: Local<f32>,
+    reused_assets: Res<ReusedAssets>,
 ) {
     let (mut character_controller, action_state) = query.single_mut();
 
     if action_state.just_pressed(Action::Jump) {
         *jump_shift = 20.0;
+        commands.spawn(AudioBundle {
+            source: reused_assets.hop.clone(),
+            ..default()
+        });
     }
 
     // Gravity

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
+mod assets;
 mod player;
 mod world;
 
@@ -12,6 +13,7 @@ impl Plugin for TestAppPlugin {
             WorldInspectorPlugin::new(),
             player::PlayerPlugin,
             world::PhysicsPlugin,
+            assets::CustomAssetsPlugin,
         ));
     }
 }
