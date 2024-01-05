@@ -8,7 +8,13 @@ fn main() {
 
     if cfg!(feature = "integration_test") {
         app.add_plugins(PlaybackTestGear::new("plain_jumps".into()));
+        let assert_sys_id = app.world.register_system(test_assert);
+        app.insert_resource(AssertSystem(assert_sys_id));
     }
 
     app.add_plugins(DemoGamePlugin).run();
+}
+
+fn test_assert() {
+    println!("test_assert");
 }

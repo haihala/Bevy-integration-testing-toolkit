@@ -8,6 +8,8 @@ use bevy::{
     window::{exit_on_all_closed, exit_on_primary_closed},
 };
 
+use crate::AssertSystem;
+
 #[derive(Debug)]
 pub struct PlaybackTestGear {
     path: String,
@@ -68,7 +70,7 @@ fn script_player() {
     // Once script runs out, it should send the signal to quit the app
     dbg!("player");
 }
-fn run_asserts() {
-    // TODO: This needs to get passed in somehow
-    dbg!("asserts");
+fn run_asserts(mut commands: Commands, assert_sys: Res<AssertSystem>) {
+    dbg!("framework");
+    commands.run_system(assert_sys.0);
 }
