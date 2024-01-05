@@ -3,9 +3,14 @@ resolver = "2"
 members = ["crates/*"]
 
 [workspace.dependencies]
-bevy = { version = "0.12.0" }
+bevy = { version = "0.12.0", features = ["serialize"] }
 
 # Test game
 bevy-inspector-egui = "0.21.0"
 leafwing-input-manager = "0.11.1"
 bevy_rapier2d = { version = "0.23.0", features = ["simd-stable"] }
+
+# Testing framework
+anyhow = "1.0.40"
+serde_json = "1.0.64"
+serde = { version = "1.0.129", features = ["derive"] }
