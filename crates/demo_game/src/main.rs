@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_integration_test_framework::*;
+use bevy_integration_test_tool::*;
 use demo_game::DemoGamePlugin;
 
 fn main() {
