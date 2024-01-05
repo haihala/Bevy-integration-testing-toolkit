@@ -13,7 +13,7 @@ impl Plugin for StarPlugin {
 }
 
 #[derive(Component, Default, Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, DerefMut)]
-struct Points(usize);
+pub struct Points(pub usize);
 
 #[derive(Component)]
 struct Star;

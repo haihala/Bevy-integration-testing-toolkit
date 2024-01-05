@@ -19,3 +19,7 @@ impl Plugin for DemoGamePlugin {
         ));
     }
 }
+
+pub fn test_assert(score: Query<&star::Points>) {
+    assert_eq!(score.single().0, 1);
+}
