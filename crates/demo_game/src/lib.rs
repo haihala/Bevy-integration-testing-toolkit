@@ -6,9 +6,9 @@ mod player;
 mod star;
 mod world;
 
-pub struct TestAppPlugin;
+pub struct DemoGamePlugin;
 
-impl Plugin for TestAppPlugin {
+impl Plugin for DemoGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             WorldInspectorPlugin::new(),

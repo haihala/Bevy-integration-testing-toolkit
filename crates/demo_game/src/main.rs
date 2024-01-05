@@ -1,9 +1,9 @@
 use bevy::prelude::*;
-use lib::TestAppPlugin;
+use demo_game::DemoGamePlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(TestAppPlugin)
+        .add_plugins(DemoGamePlugin)
         .run();
 }
