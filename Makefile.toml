@@ -33,3 +33,8 @@ run_task = { name = ["format", "clippy", "test", "udeps"] }
 [tasks.demo_game]
 command = "cargo"
 args = ["run"]
+
+
+[tasks.integration_test]
+command = "cargo"
+args = ["run", "--features", "integration_test"]

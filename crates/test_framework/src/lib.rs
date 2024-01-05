@@ -1,14 +1,18 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use bevy::prelude::*;
+
+pub struct TestGearPlugin;
+
+impl Plugin for TestGearPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(PreStartup, setup)
+            .add_systems(PreUpdate, test_system);
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+fn setup() {
+    // TODO
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+fn test_system() {
+    // TODO
 }
