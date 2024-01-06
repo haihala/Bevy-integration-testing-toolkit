@@ -151,7 +151,9 @@ fn record_artefacts(
     mut screenshot_manager: ResMut<ScreenshotManager>,
     path: Res<ArtefactPath>,
 ) {
-    remove_dir_all(path.0.clone()).unwrap();
+    if path.0.exists() {
+        remove_dir_all(path.0.clone()).unwrap();
+    }
     create_dir_all(path.0.clone()).unwrap();
     let img_path = path.0.clone().join("screenshot.png");
     screenshot_manager
