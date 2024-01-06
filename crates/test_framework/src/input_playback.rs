@@ -7,8 +7,11 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use bevy::{
-    app::AppExit, ecs::system::SystemId, prelude::*, render::view::screenshot::ScreenshotManager,
-    window::PrimaryWindow,
+    app::AppExit,
+    ecs::system::SystemId,
+    prelude::*,
+    render::view::screenshot::ScreenshotManager,
+    window::{exit_on_all_closed, exit_on_primary_closed, PrimaryWindow},
 };
 
 use crate::{AssertSystem, Asserter};
@@ -35,24 +38,25 @@ impl Plugin for PlaybackTestGear {
         let (maybe_script, script_path, artefact_path) = load_script(self.path.clone());
 
         if let Some(script) = maybe_script {
-            app.insert_resource(script)
-                .add_systems(First, script_player);
-
             let id = app.world.register_system(record_artefacts);
-            app.insert_resource(QuitCallback(id));
-            app
+            app.insert_resource(script)
+                .add_systems(First, script_player)
+                .add_event::<CustomQuitEvent>()
+                .insert_resource(QuitCallback(id))
+                .add_systems(Update, delayed_exit)
+                .insert_resource(ArtefactPath(artefact_path))
         } else {
             app.insert_resource(TestScript::default())
-                .add_systems(First, script_recorder);
-
-            let id = app.world.register_system(save_script);
-            app.insert_resource(QuitCallback(id));
-            app
+                .add_systems(First, script_recorder)
+                .add_systems(
+                    PostUpdate,
+                    save_script
+                        .run_if(on_event::<AppExit>())
+                        .after(exit_on_primary_closed)
+                        .after(exit_on_all_closed),
+                )
         }
-        .insert_resource(ScriptPath(script_path))
-        .insert_resource(ArtefactPath(artefact_path))
-        .add_event::<CustomQuitEvent>()
-        .add_systems(Update, delayed_exit);
+        .insert_resource(ScriptPath(script_path));
     }
 }
 
@@ -95,17 +99,27 @@ fn script_recorder(
     mut script: ResMut<TestScript>,
     time: Res<Time<Real>>,
     input: Res<Input<KeyCode>>,
+    mut start_time: Local<Duration>,
 ) {
+    if *start_time == Duration::default() {
+        // Offset from the game start in case it lags a bit.
+        *start_time = time.elapsed();
+    }
     for key in input.get_just_pressed() {
-        script.0.push((time.elapsed(), UserInput::KeyPress(*key)));
+        script
+            .0
+            .push((time.elapsed() - *start_time, UserInput::KeyPress(*key)));
     }
 
     for key in input.get_just_released() {
-        script.0.push((time.elapsed(), UserInput::KeyRelese(*key)));
+        script
+            .0
+            .push((time.elapsed() - *start_time, UserInput::KeyRelese(*key)));
     }
 }
 
 fn save_script(script: Res<TestScript>, path: Res<ScriptPath>, time: Res<Time<Real>>) {
+    dbg!("Saving script");
     let mut script = script.clone();
     script.0.push((time.elapsed(), UserInput::Quit));
 
@@ -124,12 +138,13 @@ fn script_player(
     script: Res<TestScript>,
     mut quit_events: EventWriter<CustomQuitEvent>,
     mut kb_input: ResMut<Input<KeyCode>>,
+    mut start_time: Local<Duration>,
 ) {
     for ev in script
         .0
         .iter()
-        .skip_while(|(event_time, _)| *event_time < *last_run)
-        .take_while(|(event_time, _)| *event_time < time.elapsed())
+        .skip_while(|(event_time, _)| *event_time < *last_run - *start_time)
+        .take_while(|(event_time, _)| *event_time < time.elapsed() - *start_time)
         .map(|(_, input)| input)
     {
         match ev {
@@ -137,6 +152,11 @@ fn script_player(
             UserInput::KeyRelese(key) => kb_input.release(*key),
             UserInput::Quit => quit_events.send(CustomQuitEvent),
         }
+    }
+
+    if *start_time == Duration::default() {
+        // Offset from the game start in case it lags a bit.
+        *start_time = time.elapsed();
     }
 
     *last_run = time.elapsed();
