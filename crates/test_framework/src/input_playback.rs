@@ -37,12 +37,15 @@ impl Plugin for PlaybackTestGear {
         } else {
             app.insert_resource(TestScript::default())
                 .add_systems(First, script_recorder)
+                .add_systems(
+                    PostUpdate,
+                    save_script.run_if(on_event::<AppExit>()).after(run_asserts),
+                )
         }
         .insert_resource(ScriptPath(path))
         .add_systems(
             PostUpdate,
-            (save_script, run_asserts)
-                .chain()
+            run_asserts
                 .run_if(on_event::<AppExit>())
                 .after(exit_on_primary_closed)
                 .after(exit_on_all_closed),
