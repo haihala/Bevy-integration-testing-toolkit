@@ -33,3 +33,9 @@ jobs:
 
       - name: Run integration tests
         run: cargo make integration_test
+
+      - name: Save artefacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-artefacts
+          path: bitt/artefacts
