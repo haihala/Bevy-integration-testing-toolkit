@@ -1,4 +1,4 @@
-name: Cargo make CI
+name: CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  CI:
+  simple-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: davidB/rust-cargo-make@v1
@@ -15,7 +15,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install dependencies
-        run: sudo apt-get update 
+        run: sudo apt-get update
           && sudo apt-get install -y g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
 
       - name: Build
@@ -23,3 +23,13 @@ jobs:
 
       - name: Run checks
         run: cargo make validate
+
+  integration-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: davidB/rust-cargo-make@v1
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run integration tests
+        run: cargo make integration-tests
