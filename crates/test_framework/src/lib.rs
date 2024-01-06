@@ -8,8 +8,9 @@ pub struct AssertSystem(pub SystemId);
 
 #[macro_export]
 macro_rules! test_scenario {
-    ($script_name:expr, $assert_system:ident, $appPlugins:ident) => {
+    ($script_name:expr, $assert_system:path, $appPlugins:path) => {
         use bevy::prelude::*;
+        use bevy_integration_test_tool::{AssertSystem, PlaybackTestGear};
 
         let mut app = App::new();
         app.add_plugins(DefaultPlugins);
