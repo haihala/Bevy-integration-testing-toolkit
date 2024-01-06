@@ -34,7 +34,11 @@ run_task = { name = ["format", "clippy", "test", "udeps"] }
 command = "cargo"
 args = ["run", "--bin", "main"]
 
-
 [tasks.integration_test]
 command = "cargo"
 args = ["run", "--bin", "integration_test"]
+
+[tasks.ci_integration_test]
+command = "cargo"
+args = ["run", "--bin", "integration_test"]
+env = { "CI" = "true" }

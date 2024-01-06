@@ -6,7 +6,7 @@ pub use input_playback::PlaybackTestGear;
 
 #[macro_export]
 macro_rules! test_scenario {
-    ($script_name:expr, $assert_system:path, $appPlugins:path) => {
+    ($script_name:expr, $assert_system:path, $app_plugins:path, $read_only:expr) => {
         use bevy::prelude::*;
         use bevy_integration_test_tool::{
             AssertSystem, Asserter, AsserterPlugin, PlaybackTestGear,
@@ -15,11 +15,11 @@ macro_rules! test_scenario {
         let mut app = App::new();
         app.add_plugins(DefaultPlugins);
 
-        app.add_plugins(PlaybackTestGear::new($script_name.into()));
+        app.add_plugins(PlaybackTestGear::new($script_name.into(), $read_only));
         app.add_plugins(AsserterPlugin);
         let assert_sys_id = app.world.register_system($assert_system);
         app.insert_resource(AssertSystem(assert_sys_id));
 
-        app.add_plugins($appPlugins).run();
+        app.add_plugins($app_plugins).run();
     };
 }

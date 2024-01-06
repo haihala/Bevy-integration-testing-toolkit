@@ -32,7 +32,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Run integration tests
-        run: cargo make integration_test
+        run: cargo make ci_integration_test
 
       - name: Save artefacts
         uses: actions/upload-artifact@v3

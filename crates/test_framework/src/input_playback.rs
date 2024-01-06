@@ -24,20 +24,24 @@ struct ArtefactPath(PathBuf);
 
 #[derive(Debug)]
 pub struct PlaybackTestGear {
-    path: String,
+    case_name: String,
+    read_only: bool,
 }
 
 impl PlaybackTestGear {
-    pub fn new(path: String) -> Self {
-        Self { path }
+    pub fn new(case_name: String, read_only: bool) -> Self {
+        Self {
+            case_name,
+            read_only,
+        }
     }
 }
 
 impl Plugin for PlaybackTestGear {
     fn build(&self, app: &mut App) {
-        let (maybe_script, script_path, artefact_path) = load_script(self.path.clone());
+        let (script_path, artefact_path) = get_paths(self.case_name.clone());
 
-        if let Some(script) = maybe_script {
+        if let Some(script) = load_script(&script_path) {
             let id = app.world.register_system(record_artefacts);
             app.insert_resource(script)
                 .add_systems(First, script_player)
@@ -46,6 +50,8 @@ impl Plugin for PlaybackTestGear {
                 .add_systems(Update, delayed_exit)
                 .insert_resource(ArtefactPath(artefact_path))
         } else {
+            assert!(!self.read_only, "Script {} doesn't exist", self.case_name);
+
             app.insert_resource(TestScript::default())
                 .add_systems(First, script_recorder)
                 .add_systems(
@@ -73,7 +79,7 @@ enum UserInput {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
 struct TestScript(Vec<(Duration, UserInput)>);
 
-fn load_script(case_name: String) -> (Option<TestScript>, PathBuf, PathBuf) {
+fn get_paths(case_name: String) -> (PathBuf, PathBuf) {
     let base_path = Path::new("bitt");
 
     let script_path = base_path
@@ -82,17 +88,17 @@ fn load_script(case_name: String) -> (Option<TestScript>, PathBuf, PathBuf) {
 
     let artefact_path = base_path.join("artefacts").join(case_name);
 
-    (
-        if script_path.exists() {
-            let file = read_to_string(&script_path).unwrap();
-            let script: TestScript = serde_json::from_str(&file).unwrap();
-            Some(script)
-        } else {
-            None
-        },
-        script_path,
-        artefact_path,
-    )
+    (script_path, artefact_path)
+}
+
+fn load_script(path: &Path) -> Option<TestScript> {
+    if path.exists() {
+        let script = read_to_string(path).unwrap();
+        let script: TestScript = serde_json::from_str(&script).unwrap();
+        Some(script)
+    } else {
+        None
+    }
 }
 
 fn script_recorder(
