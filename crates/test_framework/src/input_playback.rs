@@ -44,7 +44,7 @@ impl Plugin for PlaybackTestGear {
         if let Some(script) = load_script(&script_path) {
             let id = app.world.register_system(record_artefacts);
             app.insert_resource(script)
-                .add_systems(First, script_player)
+                .add_systems(First, (set_first_update, script_player).chain())
                 .add_event::<CustomQuitEvent>()
                 .insert_resource(QuitCallback(id))
                 .add_systems(Update, delayed_exit)
@@ -53,7 +53,7 @@ impl Plugin for PlaybackTestGear {
             assert!(!self.read_only, "Script {} doesn't exist", self.case_name);
 
             app.insert_resource(TestScript::default())
-                .add_systems(First, script_recorder)
+                .add_systems(First, (set_first_update, script_recorder).chain())
                 .add_systems(
                     PostUpdate,
                     save_script
@@ -63,6 +63,19 @@ impl Plugin for PlaybackTestGear {
                 )
         }
         .insert_resource(ScriptPath(script_path));
+    }
+}
+
+#[derive(Debug, Resource)]
+struct FirstUpdate(Duration);
+
+fn set_first_update(
+    mut commands: Commands,
+    time: Res<Time<Real>>,
+    first_update: Option<Res<FirstUpdate>>,
+) {
+    if first_update.is_none() {
+        commands.insert_resource(FirstUpdate(time.elapsed()));
     }
 }
 
@@ -105,29 +118,33 @@ fn script_recorder(
     mut script: ResMut<TestScript>,
     time: Res<Time<Real>>,
     input: Res<Input<KeyCode>>,
-    mut start_time: Local<Duration>,
+    start_time: Res<FirstUpdate>,
 ) {
-    if *start_time == Duration::default() {
-        // Offset from the game start in case it lags a bit.
-        *start_time = time.elapsed();
-    }
+    let timestamp = time.elapsed() - start_time.0;
+
     for key in input.get_just_pressed() {
-        script
-            .0
-            .push((time.elapsed() - *start_time, UserInput::KeyPress(*key)));
+        script.0.push((timestamp, UserInput::KeyPress(*key)));
     }
 
     for key in input.get_just_released() {
-        script
-            .0
-            .push((time.elapsed() - *start_time, UserInput::KeyRelese(*key)));
+        script.0.push((timestamp, UserInput::KeyRelese(*key)));
     }
 }
 
-fn save_script(script: Res<TestScript>, path: Res<ScriptPath>, time: Res<Time<Real>>) {
-    dbg!("Saving script");
+fn save_script(
+    script: Res<TestScript>,
+    path: Res<ScriptPath>,
+    time: Res<Time<Real>>,
+    first_update: Option<Res<FirstUpdate>>,
+) {
+    let Some(start_time) = first_update else {
+        return;
+    };
+
     let mut script = script.clone();
-    script.0.push((time.elapsed(), UserInput::Quit));
+    script
+        .0
+        .push((time.elapsed() - start_time.0, UserInput::Quit));
 
     let prefix = path.0.parent().unwrap();
     create_dir_all(prefix).unwrap();
@@ -144,13 +161,17 @@ fn script_player(
     script: Res<TestScript>,
     mut quit_events: EventWriter<CustomQuitEvent>,
     mut kb_input: ResMut<Input<KeyCode>>,
-    mut start_time: Local<Duration>,
+    first_update: Option<Res<FirstUpdate>>,
 ) {
+    let Some(start_time) = first_update else {
+        return;
+    };
+
     for ev in script
         .0
         .iter()
-        .skip_while(|(event_time, _)| *event_time < *last_run - *start_time)
-        .take_while(|(event_time, _)| *event_time < time.elapsed() - *start_time)
+        .skip_while(|(event_time, _)| *event_time + start_time.0 <= *last_run)
+        .take_while(|(event_time, _)| *event_time + start_time.0 <= time.elapsed())
         .map(|(_, input)| input)
     {
         match ev {
@@ -158,11 +179,6 @@ fn script_player(
             UserInput::KeyRelese(key) => kb_input.release(*key),
             UserInput::Quit => quit_events.send(CustomQuitEvent),
         }
-    }
-
-    if *start_time == Duration::default() {
-        // Offset from the game start in case it lags a bit.
-        *start_time = time.elapsed();
     }
 
     *last_run = time.elapsed();
