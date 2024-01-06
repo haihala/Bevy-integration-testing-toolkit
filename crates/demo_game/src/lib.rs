@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_integration_test_tool::Asserter;
 
 mod assets;
 mod player;
@@ -20,6 +21,6 @@ impl Plugin for DemoGamePlugin {
     }
 }
 
-pub fn test_assert(score: Query<&star::Points>) {
-    assert_eq!(score.single().0, 1);
+pub fn test_assert(score: Query<&star::Points>, mut asserter: ResMut<Asserter>) {
+    asserter.assert(score.single().0 == 1);
 }

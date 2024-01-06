@@ -7,14 +7,11 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use bevy::{
-    app::AppExit,
-    ecs::system::SystemId,
-    prelude::*,
-    render::view::screenshot::ScreenshotManager,
-    window::{exit_on_all_closed, exit_on_primary_closed, PrimaryWindow},
+    app::AppExit, ecs::system::SystemId, prelude::*, render::view::screenshot::ScreenshotManager,
+    window::PrimaryWindow,
 };
 
-use crate::AssertSystem;
+use crate::{AssertSystem, Asserter};
 
 #[derive(Debug, Resource)]
 struct ScriptPath(PathBuf);
@@ -55,13 +52,6 @@ impl Plugin for PlaybackTestGear {
         .insert_resource(ScriptPath(script_path))
         .insert_resource(ArtefactPath(artefact_path))
         .add_event::<CustomQuitEvent>()
-        .add_systems(
-            PostUpdate,
-            run_asserts
-                .run_if(on_event::<AppExit>())
-                .after(exit_on_primary_closed)
-                .after(exit_on_all_closed),
-        )
         .add_systems(Update, delayed_exit);
     }
 }
@@ -171,17 +161,16 @@ fn record_artefacts(
     commands.insert_resource(EndScreenshot(img_path));
 }
 
-fn run_asserts(mut commands: Commands, assert_sys: Res<AssertSystem>) {
-    commands.run_system(assert_sys.0);
-}
-
+#[allow(clippy::too_many_arguments)]
 fn delayed_exit(
     mut quit_events: ResMut<Events<AppExit>>,
     mut commands: Commands,
     callback: Res<QuitCallback>,
+    assert_sys: Res<AssertSystem>,
     custom_quit_events: EventReader<CustomQuitEvent>,
     mut started: Local<bool>,
     screenshot: Option<Res<EndScreenshot>>,
+    asserter: Res<Asserter>,
 ) {
     if *started {
         let mut done = false;
@@ -199,10 +188,17 @@ fn delayed_exit(
             }
         }
 
-        if done {
-            quit_events.send(AppExit);
+        if done && asserter.ran {
+            if asserter.passed {
+                println!("Test passed");
+                quit_events.send(AppExit);
+            } else {
+                // TODO: figure out a nicer way to fail the test
+                panic!("Test failed");
+            }
         }
     } else if !custom_quit_events.is_empty() {
+        commands.run_system(assert_sys.0);
         commands.run_system(callback.0);
         *started = true;
     }
