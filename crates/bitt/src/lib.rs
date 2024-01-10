@@ -6,7 +6,7 @@ pub use input_playback::PlaybackTestGear;
 
 #[macro_export]
 macro_rules! test_scenario {
-    ($script_name:expr, $assert_system:path, $app_plugins:path, $read_only:expr) => {
+    ($script_name:expr, $assert_system:path, $app_plugins:expr, $read_only:expr) => {
         use bevy::prelude::*;
         use bitt::{AssertSystem, Asserter, AsserterPlugin, PlaybackTestGear};
 
