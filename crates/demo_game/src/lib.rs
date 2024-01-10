@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_integration_test_tool::Asserter;
+use bitt::Asserter;
 
 mod assets;
 mod player;

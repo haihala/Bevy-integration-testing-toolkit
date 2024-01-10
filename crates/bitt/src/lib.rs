@@ -8,9 +8,7 @@ pub use input_playback::PlaybackTestGear;
 macro_rules! test_scenario {
     ($script_name:expr, $assert_system:path, $app_plugins:path, $read_only:expr) => {
         use bevy::prelude::*;
-        use bevy_integration_test_tool::{
-            AssertSystem, Asserter, AsserterPlugin, PlaybackTestGear,
-        };
+        use bitt::{AssertSystem, Asserter, AsserterPlugin, PlaybackTestGear};
 
         let mut app = App::new();
         app.add_plugins(DefaultPlugins);

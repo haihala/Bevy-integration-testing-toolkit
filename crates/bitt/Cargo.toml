@@ -1,5 +1,5 @@
 [package]
-name = "bevy_integration_test_tool"
+name = "bitt"
 version = "0.1.0"
 edition = "2021"
 

@@ -9,7 +9,7 @@ bevy-inspector-egui = { workspace = true }
 leafwing-input-manager = { workspace = true }
 bevy_rapier2d = { workspace = true }
 
-bevy_integration_test_tool = { path = "../test_framework" }
+bitt = { path = "../bitt" }
 
 [features]
 integration_test = []
