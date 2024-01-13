@@ -60,6 +60,7 @@ fn player_input(
     mut query: Query<(&mut KinematicCharacterController, &ActionState<Action>), With<Player>>,
     mut jump_shift: Local<f32>,
     reused_assets: Res<ReusedAssets>,
+    time: Res<Time>,
 ) {
     let (mut character_controller, action_state) = query.single_mut();
 
@@ -71,18 +72,20 @@ fn player_input(
     }
 
     if action_state.just_pressed(Action::Jump) {
-        *jump_shift = 20.0;
+        *jump_shift = 500.0;
         commands.spawn(AudioBundle {
             source: reused_assets.hop.clone(),
             ..default()
         });
     }
 
-    // Gravity
-    *jump_shift -= 1.0;
+    let gravity = 800.0;
+    *jump_shift -= time.delta_seconds() * gravity;
 
-    character_controller.translation = Some(Vec2::new(
-        action_state.axis_pair(Action::Move).unwrap().x() * 10.0,
-        *jump_shift,
-    ));
+    character_controller.translation = Some(
+        Vec2::new(
+            action_state.axis_pair(Action::Move).unwrap().x() * 300.0,
+            *jump_shift,
+        ) * time.delta_seconds(),
+    );
 }
