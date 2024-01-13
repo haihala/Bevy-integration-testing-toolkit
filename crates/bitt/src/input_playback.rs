@@ -11,6 +11,7 @@ use bevy::{
     ecs::system::SystemId,
     prelude::*,
     render::view::screenshot::ScreenshotManager,
+    utils::HashMap,
     window::{exit_on_all_closed, exit_on_primary_closed, PrimaryWindow},
 };
 
@@ -86,6 +87,9 @@ struct QuitCallback(SystemId);
 enum UserInput {
     KeyPress(KeyCode),
     KeyRelese(KeyCode),
+    ControllerAxisChange(GamepadAxis, f32),
+    ControllerButtonPress(GamepadButton),
+    ControllerButtonRelease(GamepadButton),
     Quit,
 }
 
@@ -119,7 +123,9 @@ fn script_recorder(
     time: Res<Time<Real>>,
     first_update: Option<Res<FirstUpdate>>,
     input: Res<Input<KeyCode>>,
-    start_time: Res<FirstUpdate>,
+    pad_buttons: Res<Input<GamepadButton>>,
+    axis: Res<Axis<GamepadAxis>>,
+    mut axis_cache: Local<HashMap<GamepadAxis, f32>>,
 ) {
     let Some(start_time) = first_update else {
         return;
@@ -133,6 +139,37 @@ fn script_recorder(
 
     for key in input.get_just_released() {
         script.0.push((timestamp, UserInput::KeyRelese(*key)));
+    }
+
+    for button in pad_buttons.get_just_pressed() {
+        script
+            .0
+            .push((timestamp, UserInput::ControllerButtonPress(*button)));
+    }
+
+    for button in pad_buttons.get_just_released() {
+        script
+            .0
+            .push((timestamp, UserInput::ControllerButtonRelease(*button)));
+    }
+
+    if axis.is_changed() {
+        for dev in axis.devices() {
+            let Some(value) = axis.get(*dev) else {
+                continue;
+            };
+
+            if axis_cache
+                .get(dev)
+                .map(|cached| (value - cached).abs() > 0.01)
+                .unwrap_or(true)
+            {
+                axis_cache.insert(*dev, value);
+                script
+                    .0
+                    .push((timestamp, UserInput::ControllerAxisChange(*dev, value)));
+            }
+        }
     }
 }
 
@@ -160,12 +197,15 @@ fn save_script(
 #[derive(Debug, Clone, Copy, Event)]
 struct CustomQuitEvent;
 
+#[allow(clippy::too_many_arguments)]
 fn script_player(
     mut last_run: Local<Duration>,
     time: Res<Time<Real>>,
     script: Res<TestScript>,
     mut quit_events: EventWriter<CustomQuitEvent>,
     mut kb_input: ResMut<Input<KeyCode>>,
+    mut pad_buttons: ResMut<Input<GamepadButton>>,
+    mut axis: ResMut<Axis<GamepadAxis>>,
     first_update: Option<Res<FirstUpdate>>,
 ) {
     let Some(start_time) = first_update else {
@@ -182,6 +222,11 @@ fn script_player(
         match ev {
             UserInput::KeyPress(key) => kb_input.press(*key),
             UserInput::KeyRelese(key) => kb_input.release(*key),
+            UserInput::ControllerButtonPress(button) => pad_buttons.press(*button),
+            UserInput::ControllerButtonRelease(button) => pad_buttons.release(*button),
+            UserInput::ControllerAxisChange(key, value) => {
+                axis.set(*key, *value);
+            }
             UserInput::Quit => quit_events.send(CustomQuitEvent),
         }
     }

@@ -31,15 +31,9 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             action_state: ActionState::default(),
             // Describes how to convert from player inputs into those actions
             input_map: InputMap::new([(KeyCode::Space, Action::Jump)])
-                .insert(
-                    VirtualDPad {
-                        up: KeyCode::Up.into(),
-                        down: KeyCode::Down.into(),
-                        left: KeyCode::Left.into(),
-                        right: KeyCode::Right.into(),
-                    },
-                    Action::Move,
-                )
+                .insert(VirtualDPad::arrow_keys(), Action::Move)
+                .insert(GamepadButtonType::South, Action::Jump)
+                .insert(DualAxis::left_stick(), Action::Move)
                 .build(),
         },
         Player,
