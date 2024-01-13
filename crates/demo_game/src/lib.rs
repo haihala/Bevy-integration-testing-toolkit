@@ -28,5 +28,5 @@ impl Plugin for DemoGamePlugin {
 }
 
 pub fn test_assert(score: Query<&star::Points>, mut asserter: ResMut<Asserter>) {
-    asserter.assert(score.single().0 == 1);
+    asserter.assert(score.single().0 == 2);
 }
