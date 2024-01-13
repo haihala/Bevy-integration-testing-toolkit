@@ -40,7 +40,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         Player,
         Name::new("Player"),
-        RigidBody::KinematicVelocityBased,
+        RigidBody::KinematicPositionBased,
         KinematicCharacterController::default(),
         Collider::ball(50.0),
         SpriteBundle {
