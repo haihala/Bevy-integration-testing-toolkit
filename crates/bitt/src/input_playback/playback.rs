@@ -18,7 +18,27 @@ use crate::{AssertSystem, Asserter};
 use super::{FirstUpdate, TestScript, UserInput};
 
 #[derive(Debug, Resource)]
-struct ArtefactPath(PathBuf);
+struct ArtefactPaths {
+    base: PathBuf,
+}
+impl ArtefactPaths {
+    fn pre_assert_screenshot(&self) -> PathBuf {
+        self.base.join("pre-assert.png")
+    }
+
+    fn post_assert_screenshot(&self) -> PathBuf {
+        self.base.join("post-assert.png")
+    }
+
+    fn saved(&self) -> bool {
+        Self::file_saved(self.pre_assert_screenshot())
+            && Self::file_saved(self.post_assert_screenshot())
+    }
+
+    fn file_saved(path: PathBuf) -> bool {
+        path.exists() && File::open(path.clone()).unwrap().metadata().unwrap().len() > 0
+    }
+}
 
 #[derive(Debug, Clone, Copy, Event)]
 struct StartAsserting;
@@ -34,14 +54,17 @@ impl Plugin for PlaybackPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.script.clone())
             .add_systems(First, (connect_pads, script_player).chain())
-            .insert_resource(ArtefactPath(self.artefact_path.clone()))
+            .insert_resource(ArtefactPaths {
+                base: self.artefact_path.clone(),
+            })
             .add_event::<StartAsserting>()
             .add_event::<TestQuitEvent>()
             .add_systems(
                 Update,
                 (
                     run_asserts,
-                    record_artefacts.run_if(on_event::<TestQuitEvent>()),
+                    pre_assert_screenshot.run_if(on_event::<StartAsserting>()),
+                    post_assert_screenshot.run_if(on_event::<TestQuitEvent>()),
                     delayed_exit,
                 )
                     .chain(),
@@ -122,34 +145,44 @@ fn script_player(
     *last_run = time.elapsed();
 }
 
-#[derive(Debug, Clone, Resource)]
-struct EndScreenshot(PathBuf);
-
-fn record_artefacts(
-    mut commands: Commands,
+fn pre_assert_screenshot(
     main_window: Query<Entity, With<PrimaryWindow>>,
     mut screenshot_manager: ResMut<ScreenshotManager>,
-    path: Res<ArtefactPath>,
+    path: Res<ArtefactPaths>,
     mut has_ran: Local<bool>,
 ) {
     if *has_ran {
         return;
     }
 
-    if path.0.exists() {
-        remove_dir_all(path.0.clone()).unwrap();
+    if path.base.exists() {
+        remove_dir_all(path.base.clone()).unwrap();
     }
-    create_dir_all(path.0.clone()).unwrap();
-    let img_path = path.0.clone().join("screenshot.png");
-    screenshot_manager
-        .save_screenshot_to_disk(main_window.single(), img_path.clone())
-        .unwrap();
 
-    commands.insert_resource(EndScreenshot(img_path));
+    create_dir_all(path.base.clone()).unwrap();
+    screenshot_manager
+        .save_screenshot_to_disk(main_window.single(), path.pre_assert_screenshot())
+        .unwrap();
 
     *has_ran = true;
 }
 
+fn post_assert_screenshot(
+    main_window: Query<Entity, With<PrimaryWindow>>,
+    mut screenshot_manager: ResMut<ScreenshotManager>,
+    path: Res<ArtefactPaths>,
+    mut has_ran: Local<bool>,
+) {
+    if *has_ran {
+        return;
+    }
+
+    screenshot_manager
+        .save_screenshot_to_disk(main_window.single(), path.post_assert_screenshot())
+        .unwrap();
+
+    *has_ran = true;
+}
 fn run_asserts(
     mut commands: Commands,
     assert_sys: Res<AssertSystem>,
@@ -181,22 +214,10 @@ fn delayed_exit(
     mut quit_events: ResMut<Events<AppExit>>,
     mut custom_quit_events: EventReader<TestQuitEvent>,
     mut result: Local<Option<bool>>,
-    screenshot: Option<Res<EndScreenshot>>,
+    artefacts: Res<ArtefactPaths>,
 ) {
     if let Some(passed) = *result {
-        let Some(shot) = screenshot else {
-            return;
-        };
-
-        let screenshot_saved = shot.0.exists()
-            && File::open(shot.0.clone())
-                .unwrap()
-                .metadata()
-                .unwrap()
-                .len()
-                > 0;
-
-        if screenshot_saved {
+        if artefacts.saved() {
             if passed {
                 println!("Test passed");
                 quit_events.send(AppExit);
