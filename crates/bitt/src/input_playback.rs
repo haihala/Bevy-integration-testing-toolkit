@@ -52,7 +52,9 @@ impl Plugin for PlaybackTestGear {
                 )
                 .insert_resource(ArtefactPath(artefact_path))
                 .insert_resource(QuitCallback(id))
-                .add_systems(Update, delayed_exit)
+                .add_event::<StartAsserting>()
+                .add_event::<TestQuitEvent>()
+                .add_systems(Update, (run_asserts, delayed_exit).chain())
         } else {
             assert!(!self.read_only, "Script {} doesn't exist", self.case_name);
 
@@ -61,12 +63,9 @@ impl Plugin for PlaybackTestGear {
                     First,
                     (set_first_update, script_recorder, recording_asserter).chain(),
                 )
-                .add_systems(
-                    PostUpdate,
-                    save_script.run_if(on_event::<DelayedQuitEvent>()),
-                )
+                .add_event::<SaveQuitEvent>()
+                .add_systems(PostUpdate, save_script.run_if(on_event::<SaveQuitEvent>()))
         }
-        .add_event::<DelayedQuitEvent>()
         .insert_resource(ScriptPath(script_path));
     }
 }
@@ -88,7 +87,12 @@ fn set_first_update(
 struct QuitCallback(SystemId);
 
 #[derive(Debug, Clone, Copy, Event)]
-struct DelayedQuitEvent;
+struct SaveQuitEvent;
+#[derive(Debug, Clone, Copy, Event)]
+struct TestQuitEvent(bool);
+
+#[derive(Debug, Clone, Copy, Event)]
+struct StartAsserting;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
 struct TestScript {
@@ -201,11 +205,11 @@ fn script_recorder(
 fn recording_asserter(
     mut commands: Commands,
     asserter: ResMut<Asserter>,
-    mut quit_events: EventWriter<DelayedQuitEvent>,
+    mut quit_events: EventWriter<SaveQuitEvent>,
     assert_sys: Res<AssertSystem>,
 ) {
     if asserter.passed {
-        quit_events.send(DelayedQuitEvent);
+        quit_events.send(SaveQuitEvent);
     } else {
         commands.run_system(assert_sys.0);
     }
@@ -272,7 +276,7 @@ fn script_player(
     mut last_run: Local<Duration>,
     time: Res<Time<Real>>,
     script: Res<TestScript>,
-    mut quit_events: EventWriter<DelayedQuitEvent>,
+    mut quit_events: EventWriter<StartAsserting>,
     mut kb_input: ResMut<Input<KeyCode>>,
     mut mouse_buttons: ResMut<Input<MouseButton>>,
     mut pad_buttons: ResMut<Input<GamepadButton>>,
@@ -300,7 +304,7 @@ fn script_player(
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
             }
-            UserInput::Quit => quit_events.send(DelayedQuitEvent),
+            UserInput::Quit => quit_events.send(StartAsserting),
         }
     }
 
@@ -328,18 +332,40 @@ fn record_artefacts(
     commands.insert_resource(EndScreenshot(img_path));
 }
 
+fn run_asserts(
+    mut commands: Commands,
+    assert_sys: Res<AssertSystem>,
+    start_events: EventReader<StartAsserting>,
+    mut result_writer: EventWriter<TestQuitEvent>,
+    time: Res<Time<Real>>,
+    asserter: Res<Asserter>,
+    mut started: Local<Option<Timer>>,
+) {
+    if let Some(ref mut start_time) = *started {
+        if asserter.passed {
+            result_writer.send(TestQuitEvent(true));
+            *started = None;
+        } else if start_time.tick(time.delta()).just_finished() {
+            result_writer.send(TestQuitEvent(false));
+            *started = None;
+        } else {
+            commands.run_system(assert_sys.0);
+        }
+    } else if !start_events.is_empty() {
+        *started = Some(Timer::new(Duration::from_secs(5), TimerMode::Once));
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn delayed_exit(
     mut quit_events: ResMut<Events<AppExit>>,
     mut commands: Commands,
     callback: Res<QuitCallback>,
-    assert_sys: Res<AssertSystem>,
-    custom_quit_events: EventReader<DelayedQuitEvent>,
-    mut started: Local<bool>,
+    mut custom_quit_events: EventReader<TestQuitEvent>,
+    mut passed: Local<Option<bool>>,
     screenshot: Option<Res<EndScreenshot>>,
-    asserter: Res<Asserter>,
 ) {
-    if *started {
+    if passed.is_some() {
         let mut done = false;
 
         if let Some(shot) = screenshot {
@@ -355,8 +381,8 @@ fn delayed_exit(
             }
         }
 
-        if done && asserter.ran {
-            if asserter.passed {
+        if done {
+            if passed.unwrap() {
                 println!("Test passed");
                 quit_events.send(AppExit);
             } else {
@@ -365,8 +391,7 @@ fn delayed_exit(
             }
         }
     } else if !custom_quit_events.is_empty() {
-        commands.run_system(assert_sys.0);
         commands.run_system(callback.0);
-        *started = true;
+        *passed = Some(custom_quit_events.read().next().unwrap().0);
     }
 }
