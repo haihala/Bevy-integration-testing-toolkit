@@ -6,6 +6,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(DemoGamePlugin {
             show_inspector: true,
+            insert_test_system: false,
         })
         .run();
 }

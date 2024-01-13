@@ -13,7 +13,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::{AssertSystem, Asserter};
+use crate::Asserter;
 
 use super::{FirstUpdate, TestScript, UserInput};
 
@@ -183,9 +183,8 @@ fn post_assert_screenshot(
 
     *has_ran = true;
 }
+
 fn run_asserts(
-    mut commands: Commands,
-    assert_sys: Res<AssertSystem>,
     mut start_events: EventReader<StartAsserting>,
     mut result_writer: EventWriter<TestQuitEvent>,
     time: Res<Time<Real>>,
@@ -199,9 +198,6 @@ fn run_asserts(
         } else if start_time.tick(time.delta()).just_finished() {
             result_writer.send(TestQuitEvent(false));
             *started = None;
-        } else {
-            dbg!("Running asserts");
-            commands.run_system(assert_sys.0);
         }
     } else if start_events.read().next().is_some() {
         dbg!("Starting timer");

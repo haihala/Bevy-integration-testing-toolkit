@@ -5,7 +5,7 @@ use std::{
 
 use bevy::{app::AppExit, prelude::*, utils::HashMap};
 
-use crate::{AssertSystem, Asserter};
+use crate::Asserter;
 
 use super::{FirstUpdate, TestScript, UserInput};
 
@@ -98,16 +98,9 @@ fn script_recorder(
     }
 }
 
-fn recording_asserter(
-    mut commands: Commands,
-    asserter: ResMut<Asserter>,
-    mut quit_events: EventWriter<SaveQuitEvent>,
-    assert_sys: Res<AssertSystem>,
-) {
+fn recording_asserter(asserter: ResMut<Asserter>, mut quit_events: EventWriter<SaveQuitEvent>) {
     if asserter.passed {
         quit_events.send(SaveQuitEvent);
-    } else {
-        commands.run_system(assert_sys.0);
     }
 }
 

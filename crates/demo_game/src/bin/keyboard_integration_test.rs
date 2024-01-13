@@ -1,13 +1,13 @@
 use std::env;
 
-use bitt::test_scenario;
-use demo_game::{test_assert, DemoGamePlugin};
+use bitt::test_scenario_main;
+use demo_game::DemoGamePlugin;
 
-test_scenario!(
+test_scenario_main!(
     "keyboard",
-    test_assert,
     DemoGamePlugin {
         show_inspector: false,
+        insert_test_system: true,
     },
     env::var("CI").is_ok()
 );
