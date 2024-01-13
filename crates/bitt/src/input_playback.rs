@@ -117,9 +117,14 @@ fn load_script(path: &Path) -> Option<TestScript> {
 fn script_recorder(
     mut script: ResMut<TestScript>,
     time: Res<Time<Real>>,
+    first_update: Option<Res<FirstUpdate>>,
     input: Res<Input<KeyCode>>,
     start_time: Res<FirstUpdate>,
 ) {
+    let Some(start_time) = first_update else {
+        return;
+    };
+
     let timestamp = time.elapsed() - start_time.0;
 
     for key in input.get_just_pressed() {
