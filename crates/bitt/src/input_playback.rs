@@ -7,8 +7,13 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use bevy::{
-    app::AppExit, ecs::system::SystemId, prelude::*, render::view::screenshot::ScreenshotManager,
-    utils::HashMap, window::PrimaryWindow,
+    app::AppExit,
+    ecs::system::SystemId,
+    input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
+    prelude::*,
+    render::view::screenshot::ScreenshotManager,
+    utils::{hashbrown::HashSet, HashMap},
+    window::PrimaryWindow,
 };
 
 use crate::{AssertSystem, Asserter};
@@ -41,7 +46,10 @@ impl Plugin for PlaybackTestGear {
         if let Some(script) = load_script(&script_path) {
             let id = app.world.register_system(record_artefacts);
             app.insert_resource(script)
-                .add_systems(First, (set_first_update, script_player).chain())
+                .add_systems(
+                    First,
+                    (set_first_update, connect_pads, script_player).chain(),
+                )
                 .insert_resource(ArtefactPath(artefact_path))
                 .insert_resource(QuitCallback(id))
                 .add_systems(Update, delayed_exit)
@@ -79,6 +87,14 @@ fn set_first_update(
 #[derive(Debug, Resource)]
 struct QuitCallback(SystemId);
 
+#[derive(Debug, Clone, Copy, Event)]
+struct DelayedQuitEvent;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
+struct TestScript {
+    events: Vec<(Duration, UserInput)>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum UserInput {
     KeyPress(KeyCode),
@@ -90,9 +106,6 @@ enum UserInput {
     ControllerButtonRelease(GamepadButton),
     Quit,
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
-struct TestScript(Vec<(Duration, UserInput)>);
 
 fn get_paths(case_name: String) -> (PathBuf, PathBuf) {
     let base_path = Path::new("bitt");
@@ -134,34 +147,34 @@ fn script_recorder(
     let timestamp = time.elapsed() - start_time.0;
 
     for key in input.get_just_pressed() {
-        script.0.push((timestamp, UserInput::KeyPress(*key)));
+        script.events.push((timestamp, UserInput::KeyPress(*key)));
     }
 
     for key in input.get_just_released() {
-        script.0.push((timestamp, UserInput::KeyRelese(*key)));
+        script.events.push((timestamp, UserInput::KeyRelese(*key)));
     }
 
     for button in mouse_buttons.get_just_pressed() {
         script
-            .0
+            .events
             .push((timestamp, UserInput::MouseButtonPress(*button)));
     }
 
     for button in mouse_buttons.get_just_released() {
         script
-            .0
+            .events
             .push((timestamp, UserInput::MouseButtonRelease(*button)));
     }
 
     for button in pad_buttons.get_just_pressed() {
         script
-            .0
+            .events
             .push((timestamp, UserInput::ControllerButtonPress(*button)));
     }
 
     for button in pad_buttons.get_just_released() {
         script
-            .0
+            .events
             .push((timestamp, UserInput::ControllerButtonRelease(*button)));
     }
 
@@ -178,7 +191,7 @@ fn script_recorder(
             {
                 axis_cache.insert(*dev, value);
                 script
-                    .0
+                    .events
                     .push((timestamp, UserInput::ControllerAxisChange(*dev, value)));
             }
         }
@@ -211,7 +224,7 @@ fn save_script(
 
     let mut script = script.clone();
     script
-        .0
+        .events
         .push((time.elapsed() - start_time.0, UserInput::Quit));
 
     let prefix = path.0.parent().unwrap();
@@ -221,8 +234,38 @@ fn save_script(
     quit_events.send(AppExit);
 }
 
-#[derive(Debug, Clone, Copy, Event)]
-struct DelayedQuitEvent;
+// The point of this is to fake that the pads being used by the inputs are connected.
+fn connect_pads(
+    script: Res<TestScript>,
+    mut events: EventWriter<GamepadEvent>,
+    mut done: Local<bool>,
+) {
+    if *done {
+        return;
+    }
+
+    for pad in script
+        .events
+        .iter()
+        .filter_map(|(_, input)| match input {
+            UserInput::ControllerAxisChange(axis, _) => Some(axis.gamepad),
+            UserInput::ControllerButtonPress(button) => Some(button.gamepad),
+            UserInput::ControllerButtonRelease(button) => Some(button.gamepad),
+            _ => None,
+        })
+        .collect::<HashSet<_>>()
+        .into_iter()
+    {
+        events.send(GamepadEvent::Connection(GamepadConnectionEvent {
+            gamepad: pad,
+            connection: GamepadConnection::Connected(GamepadInfo {
+                name: "Test Pad".to_string(), // TODO: Save the name in the script if it turns out to be relevant
+            }),
+        }));
+    }
+
+    *done = true;
+}
 
 #[allow(clippy::too_many_arguments)]
 fn script_player(
@@ -241,7 +284,7 @@ fn script_player(
     };
 
     for ev in script
-        .0
+        .events
         .iter()
         .skip_while(|(event_time, _)| *event_time + start_time.0 <= *last_run)
         .take_while(|(event_time, _)| *event_time + start_time.0 <= time.elapsed())
