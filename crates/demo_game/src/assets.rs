@@ -13,12 +13,14 @@ impl Plugin for CustomAssetsPlugin {
 pub struct ReusedAssets {
     pub hop: Handle<AudioSource>,
     pub pling: Handle<AudioSource>,
+    pub click: Handle<AudioSource>,
 }
 
 fn load_reused_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(ReusedAssets {
         hop: asset_server.load("hop.ogg"),
         pling: asset_server.load("pling.ogg"),
+        click: asset_server.load("click.ogg"),
     });
 }
 

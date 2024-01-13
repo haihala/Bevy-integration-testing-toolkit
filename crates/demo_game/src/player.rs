@@ -19,6 +19,7 @@ impl Plugin for PlayerPlugin {
 enum Action {
     Jump,
     Move,
+    Click,
 }
 
 #[derive(Component)]
@@ -34,6 +35,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .insert(VirtualDPad::arrow_keys(), Action::Move)
                 .insert(GamepadButtonType::South, Action::Jump)
                 .insert(DualAxis::left_stick(), Action::Move)
+                .insert(MouseButton::Left, Action::Click)
                 .build(),
         },
         Player,
@@ -60,6 +62,13 @@ fn player_input(
     reused_assets: Res<ReusedAssets>,
 ) {
     let (mut character_controller, action_state) = query.single_mut();
+
+    if action_state.just_pressed(Action::Click) {
+        commands.spawn(AudioBundle {
+            source: reused_assets.click.clone(),
+            ..default()
+        });
+    }
 
     if action_state.just_pressed(Action::Jump) {
         *jump_shift = 20.0;

@@ -83,6 +83,8 @@ struct QuitCallback(SystemId);
 enum UserInput {
     KeyPress(KeyCode),
     KeyRelese(KeyCode),
+    MouseButtonPress(MouseButton),
+    MouseButtonRelease(MouseButton),
     ControllerAxisChange(GamepadAxis, f32),
     ControllerButtonPress(GamepadButton),
     ControllerButtonRelease(GamepadButton),
@@ -114,11 +116,13 @@ fn load_script(path: &Path) -> Option<TestScript> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn script_recorder(
     mut script: ResMut<TestScript>,
     time: Res<Time<Real>>,
     first_update: Option<Res<FirstUpdate>>,
     input: Res<Input<KeyCode>>,
+    mouse_buttons: Res<Input<MouseButton>>,
     pad_buttons: Res<Input<GamepadButton>>,
     axis: Res<Axis<GamepadAxis>>,
     mut axis_cache: Local<HashMap<GamepadAxis, f32>>,
@@ -135,6 +139,18 @@ fn script_recorder(
 
     for key in input.get_just_released() {
         script.0.push((timestamp, UserInput::KeyRelese(*key)));
+    }
+
+    for button in mouse_buttons.get_just_pressed() {
+        script
+            .0
+            .push((timestamp, UserInput::MouseButtonPress(*button)));
+    }
+
+    for button in mouse_buttons.get_just_released() {
+        script
+            .0
+            .push((timestamp, UserInput::MouseButtonRelease(*button)));
     }
 
     for button in pad_buttons.get_just_pressed() {
@@ -215,6 +231,7 @@ fn script_player(
     script: Res<TestScript>,
     mut quit_events: EventWriter<DelayedQuitEvent>,
     mut kb_input: ResMut<Input<KeyCode>>,
+    mut mouse_buttons: ResMut<Input<MouseButton>>,
     mut pad_buttons: ResMut<Input<GamepadButton>>,
     mut axis: ResMut<Axis<GamepadAxis>>,
     first_update: Option<Res<FirstUpdate>>,
@@ -233,6 +250,8 @@ fn script_player(
         match ev {
             UserInput::KeyPress(key) => kb_input.press(*key),
             UserInput::KeyRelese(key) => kb_input.release(*key),
+            UserInput::MouseButtonPress(button) => mouse_buttons.press(*button),
+            UserInput::MouseButtonRelease(button) => mouse_buttons.release(*button),
             UserInput::ControllerButtonPress(button) => pad_buttons.press(*button),
             UserInput::ControllerButtonRelease(button) => pad_buttons.release(*button),
             UserInput::ControllerAxisChange(key, value) => {
