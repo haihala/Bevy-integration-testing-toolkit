@@ -153,7 +153,7 @@ fn record_artefacts(
 fn run_asserts(
     mut commands: Commands,
     assert_sys: Res<AssertSystem>,
-    start_events: EventReader<StartAsserting>,
+    mut start_events: EventReader<StartAsserting>,
     mut result_writer: EventWriter<TestQuitEvent>,
     time: Res<Time<Real>>,
     asserter: Res<Asserter>,
@@ -167,9 +167,11 @@ fn run_asserts(
             result_writer.send(TestQuitEvent(false));
             *started = None;
         } else {
+            dbg!("Running asserts");
             commands.run_system(assert_sys.0);
         }
-    } else if !start_events.is_empty() {
+    } else if start_events.read().next().is_some() {
+        dbg!("Starting timer");
         *started = Some(Timer::new(Duration::from_secs(5), TimerMode::Once));
     }
 }
@@ -178,27 +180,24 @@ fn run_asserts(
 fn delayed_exit(
     mut quit_events: ResMut<Events<AppExit>>,
     mut custom_quit_events: EventReader<TestQuitEvent>,
-    mut passed: Local<Option<bool>>,
+    mut result: Local<Option<bool>>,
     screenshot: Option<Res<EndScreenshot>>,
 ) {
-    if passed.is_some() {
-        let mut done = false;
+    if let Some(passed) = *result {
+        let Some(shot) = screenshot else {
+            return;
+        };
 
-        if let Some(shot) = screenshot {
-            if shot.0.exists()
-                && File::open(shot.0.clone())
-                    .unwrap()
-                    .metadata()
-                    .unwrap()
-                    .len()
-                    > 0
-            {
-                done = true;
-            }
-        }
+        let screenshot_saved = shot.0.exists()
+            && File::open(shot.0.clone())
+                .unwrap()
+                .metadata()
+                .unwrap()
+                .len()
+                > 0;
 
-        if done {
-            if passed.unwrap() {
+        if screenshot_saved {
+            if passed {
                 println!("Test passed");
                 quit_events.send(AppExit);
             } else {
@@ -207,6 +206,7 @@ fn delayed_exit(
             }
         }
     } else if !custom_quit_events.is_empty() {
-        *passed = Some(custom_quit_events.read().next().unwrap().0);
+        *result = Some(custom_quit_events.read().next().unwrap().0);
+        dbg!("Result set to {:?}", *result);
     }
 }
