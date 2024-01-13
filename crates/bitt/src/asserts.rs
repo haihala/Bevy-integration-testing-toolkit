@@ -1,23 +1,14 @@
 use bevy::{ecs::system::SystemId, prelude::*};
 
-#[derive(Resource, Debug)]
+#[derive(Resource, Debug, Default)]
 pub struct Asserter {
     pub(crate) passed: bool,
     pub(crate) ran: bool,
 }
 
-impl Default for Asserter {
-    fn default() -> Self {
-        Self {
-            passed: true,
-            ran: false,
-        }
-    }
-}
-
 impl Asserter {
     pub fn assert(&mut self, condition: bool) {
-        self.passed &= condition;
+        self.passed |= condition;
         self.ran = true;
     }
 }

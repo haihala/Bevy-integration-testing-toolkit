@@ -7,12 +7,8 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use bevy::{
-    app::AppExit,
-    ecs::system::SystemId,
-    prelude::*,
-    render::view::screenshot::ScreenshotManager,
-    utils::HashMap,
-    window::{exit_on_all_closed, exit_on_primary_closed, PrimaryWindow},
+    app::AppExit, ecs::system::SystemId, prelude::*, render::view::screenshot::ScreenshotManager,
+    utils::HashMap, window::PrimaryWindow,
 };
 
 use crate::{AssertSystem, Asserter};
@@ -46,23 +42,23 @@ impl Plugin for PlaybackTestGear {
             let id = app.world.register_system(record_artefacts);
             app.insert_resource(script)
                 .add_systems(First, (set_first_update, script_player).chain())
-                .add_event::<CustomQuitEvent>()
+                .insert_resource(ArtefactPath(artefact_path))
                 .insert_resource(QuitCallback(id))
                 .add_systems(Update, delayed_exit)
-                .insert_resource(ArtefactPath(artefact_path))
         } else {
             assert!(!self.read_only, "Script {} doesn't exist", self.case_name);
 
             app.insert_resource(TestScript::default())
-                .add_systems(First, (set_first_update, script_recorder).chain())
+                .add_systems(
+                    First,
+                    (set_first_update, script_recorder, recording_asserter).chain(),
+                )
                 .add_systems(
                     PostUpdate,
-                    save_script
-                        .run_if(on_event::<AppExit>())
-                        .after(exit_on_primary_closed)
-                        .after(exit_on_all_closed),
+                    save_script.run_if(on_event::<DelayedQuitEvent>()),
                 )
         }
+        .add_event::<DelayedQuitEvent>()
         .insert_resource(ScriptPath(script_path));
     }
 }
@@ -173,11 +169,25 @@ fn script_recorder(
     }
 }
 
+fn recording_asserter(
+    mut commands: Commands,
+    asserter: ResMut<Asserter>,
+    mut quit_events: EventWriter<DelayedQuitEvent>,
+    assert_sys: Res<AssertSystem>,
+) {
+    if asserter.passed {
+        quit_events.send(DelayedQuitEvent);
+    } else {
+        commands.run_system(assert_sys.0);
+    }
+}
+
 fn save_script(
     script: Res<TestScript>,
     path: Res<ScriptPath>,
     time: Res<Time<Real>>,
     first_update: Option<Res<FirstUpdate>>,
+    mut quit_events: ResMut<Events<AppExit>>,
 ) {
     let Some(start_time) = first_update else {
         return;
@@ -192,17 +202,18 @@ fn save_script(
     create_dir_all(prefix).unwrap();
     let file = File::create(&path.0).unwrap();
     serde_json::to_writer(file, &script).unwrap();
+    quit_events.send(AppExit);
 }
 
 #[derive(Debug, Clone, Copy, Event)]
-struct CustomQuitEvent;
+struct DelayedQuitEvent;
 
 #[allow(clippy::too_many_arguments)]
 fn script_player(
     mut last_run: Local<Duration>,
     time: Res<Time<Real>>,
     script: Res<TestScript>,
-    mut quit_events: EventWriter<CustomQuitEvent>,
+    mut quit_events: EventWriter<DelayedQuitEvent>,
     mut kb_input: ResMut<Input<KeyCode>>,
     mut pad_buttons: ResMut<Input<GamepadButton>>,
     mut axis: ResMut<Axis<GamepadAxis>>,
@@ -227,7 +238,7 @@ fn script_player(
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
             }
-            UserInput::Quit => quit_events.send(CustomQuitEvent),
+            UserInput::Quit => quit_events.send(DelayedQuitEvent),
         }
     }
 
@@ -261,7 +272,7 @@ fn delayed_exit(
     mut commands: Commands,
     callback: Res<QuitCallback>,
     assert_sys: Res<AssertSystem>,
-    custom_quit_events: EventReader<CustomQuitEvent>,
+    custom_quit_events: EventReader<DelayedQuitEvent>,
     mut started: Local<bool>,
     screenshot: Option<Res<EndScreenshot>>,
     asserter: Res<Asserter>,
