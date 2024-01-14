@@ -58,12 +58,6 @@ fn spin_star(time: Res<Time>, mut query: Query<&mut Transform, With<Star>>) {
     }
 }
 
-// Likely due to system ordering, sound of star pickup is played twice.
-// This is a workaround to prevent that.
-// Not happy with it, but I'm prioritizing.
-#[derive(Component)]
-struct RespawnCooldown;
-
 #[allow(clippy::type_complexity)]
 fn detect_collisions(
     mut commands: Commands,
@@ -73,14 +67,9 @@ fn detect_collisions(
         Query<&Transform, With<StarSpawnPoint>>,
     )>,
     reused_assets: Res<ReusedAssets>,
-    cooldown: Query<&RespawnCooldown>,
     mut points: Query<(&mut Text, &mut Points)>,
     rapier_context: Res<RapierContext>,
 ) {
-    if !cooldown.is_empty() {
-        return;
-    }
-
     let players = queries.p0();
     let Ok(player_tf) = players.get_single() else {
         return;
@@ -108,13 +97,10 @@ fn detect_collisions(
         )
         .is_some()
     {
-        commands.spawn((
-            AudioBundle {
-                source: reused_assets.pling.clone(),
-                ..default()
-            },
-            RespawnCooldown,
-        ));
+        commands.spawn((AudioBundle {
+            source: reused_assets.pling.clone(),
+            ..default()
+        },));
 
         star_tf.translation.x = next_star_x;
         let (mut text, mut points) = points.single_mut();
