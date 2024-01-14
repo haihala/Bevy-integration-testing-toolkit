@@ -201,7 +201,7 @@ fn run_asserts(
         }
     } else if start_events.read().next().is_some() {
         dbg!("Starting timer");
-        *started = Some(Timer::new(Duration::from_secs(5), TimerMode::Once));
+        *started = Some(Timer::from_seconds(5.0, TimerMode::Once));
     }
 }
 

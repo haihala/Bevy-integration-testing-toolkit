@@ -98,9 +98,18 @@ fn script_recorder(
     }
 }
 
-fn recording_asserter(asserter: ResMut<Asserter>, mut quit_events: EventWriter<SaveQuitEvent>) {
-    if asserter.passed {
-        quit_events.send(SaveQuitEvent);
+fn recording_asserter(
+    asserter: ResMut<Asserter>,
+    mut quit_events: EventWriter<SaveQuitEvent>,
+    mut delay: Local<Option<Timer>>,
+    time: Res<Time<Real>>,
+) {
+    if let Some(ref mut timer) = *delay {
+        if timer.tick(time.delta()).just_finished() {
+            quit_events.send(SaveQuitEvent);
+        }
+    } else if asserter.passed {
+        *delay = Some(Timer::from_seconds(0.2, TimerMode::Once));
     }
 }
 
