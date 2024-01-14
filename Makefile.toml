@@ -46,8 +46,8 @@ args = ["run", "--bin", "controller_integration_test"]
 
 [tasks.integration_test]
 run_task = { name = [
-    "keyboard_integration_test",
     "controller_integration_test",
+    "keyboard_integration_test",
 ] }
 
 [tasks.ci_integration_test]
