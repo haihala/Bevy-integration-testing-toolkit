@@ -64,6 +64,7 @@ fn spin_star(time: Res<Time>, mut query: Query<&mut Transform, With<Star>>) {
 #[derive(Component)]
 struct RespawnCooldown;
 
+#[allow(clippy::type_complexity)]
 fn detect_collisions(
     mut commands: Commands,
     mut queries: ParamSet<(
