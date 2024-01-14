@@ -23,7 +23,7 @@ enum Action {
 }
 
 #[derive(Component)]
-struct Player;
+pub struct Player;
 
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
@@ -41,7 +41,10 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         Player,
         Name::new("Player"),
         RigidBody::KinematicPositionBased,
-        KinematicCharacterController::default(),
+        KinematicCharacterController {
+            filter_flags: QueryFilterFlags::EXCLUDE_SENSORS,
+            ..default()
+        },
         Collider::ball(50.0),
         SpriteBundle {
             texture: asset_server.load("player.png"),

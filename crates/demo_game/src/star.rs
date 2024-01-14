@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::assets::ReusedAssets;
+use crate::{assets::ReusedAssets, player::Player};
 
 pub struct StarPlugin;
 
@@ -38,18 +38,6 @@ fn spawn_star(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
     ));
 
-    commands
-        .spawn((SpatialBundle::default(), Name::new("Spawn points")))
-        .with_children(|root| {
-            for i in 0..10 {
-                root.spawn((
-                    StarSpawnPoint,
-                    Name::new("Spawn point"),
-                    SpatialBundle::from(Transform::from_xyz((i - 5) as f32 * 100.0, 400.0, 0.0)),
-                ));
-            }
-        });
-
     commands.spawn((
         TextBundle::from_sections([TextSection::new(
             "0",
@@ -78,26 +66,47 @@ struct RespawnCooldown;
 
 fn detect_collisions(
     mut commands: Commands,
-    player_query: Query<&KinematicCharacterControllerOutput>,
+    mut queries: ParamSet<(
+        Query<&Transform, With<Player>>,
+        Query<(&mut Transform, &Collider), With<Star>>,
+        Query<&Transform, With<StarSpawnPoint>>,
+    )>,
     reused_assets: Res<ReusedAssets>,
-    mut stars: Query<&mut Transform, (With<Star>, Without<StarSpawnPoint>)>,
-    spawn_points: Query<&mut Transform, (With<StarSpawnPoint>, Without<Star>)>,
     cooldown: Query<&RespawnCooldown>,
     mut points: Query<(&mut Text, &mut Points)>,
+    rapier_context: Res<RapierContext>,
 ) {
     if !cooldown.is_empty() {
         return;
     }
 
-    let Ok(cc) = player_query.get_single() else {
+    let players = queries.p0();
+    let Ok(player_tf) = players.get_single() else {
+        return;
+    };
+    let next_star_x = if player_tf.translation.x > 0.0 {
+        -400.0
+    } else {
+        400.0
+    };
+
+    let mut stars = queries.p1();
+    let Ok((ref mut star_tf, star_shape)) = stars.get_single_mut() else {
         return;
     };
 
-    for contact in &cc.collisions {
-        let Ok(ref mut star_tf) = stars.get_mut(contact.entity) else {
-            continue;
-        };
-
+    if rapier_context
+        .intersection_with_shape(
+            star_tf.translation.truncate(),
+            0.0,
+            star_shape,
+            QueryFilter {
+                flags: QueryFilterFlags::EXCLUDE_SENSORS,
+                ..default()
+            },
+        )
+        .is_some()
+    {
         commands.spawn((
             AudioBundle {
                 source: reused_assets.pling.clone(),
@@ -106,17 +115,9 @@ fn detect_collisions(
             RespawnCooldown,
         ));
 
-        let furtherst_spawn_point = spawn_points
-            .iter()
-            .max_by_key(|sp| {
-                (sp.translation.truncate() - contact.character_translation).length() as usize
-            })
-            .unwrap();
-
-        star_tf.translation = furtherst_spawn_point.translation;
+        star_tf.translation.x = next_star_x;
         let (mut text, mut points) = points.single_mut();
         points.0 += 1;
         text.sections[0].value = points.0.to_string();
-        return;
-    }
+    };
 }
