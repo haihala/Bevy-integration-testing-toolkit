@@ -33,6 +33,7 @@ impl Plugin for DemoGamePlugin {
 }
 
 fn test_assert(score: Query<&star::Points>, mut asserter: ResMut<Asserter>) {
+    dbg!("test_assert");
     if score.single().0 == 2 {
         asserter.pass();
     }

@@ -7,6 +7,7 @@ pub struct Asserter {
 
 impl Asserter {
     pub fn pass(&mut self) {
+        dbg!("pass");
         self.passed = true;
     }
 }
