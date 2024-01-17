@@ -207,7 +207,6 @@ fn run_asserts(
             *started = None;
         }
     } else if start_events.read().next().is_some() {
-        dbg!("Starting timer");
         *started = Some(Timer::from_seconds(5.0, TimerMode::Once));
     }
 }
@@ -231,6 +230,5 @@ fn delayed_exit(
         }
     } else if !custom_quit_events.is_empty() {
         *result = Some(custom_quit_events.read().next().unwrap().0);
-        dbg!("Result set to {:?}", *result);
     }
 }
