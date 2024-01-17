@@ -2,7 +2,7 @@ use std::env;
 
 use bevy::prelude::*;
 
-use bitt::{Asserter, AsserterPlugin, PlaybackTestGear};
+use bitt::{Asserter, PlaybackTestGear};
 
 use demo_game::{DemoGamePlugin, Points};
 
@@ -13,11 +13,10 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             PlaybackTestGear::new(script, env::var("CI").is_ok()),
-            AsserterPlugin,
+            DemoGamePlugin {
+                show_inspector: false,
+            },
         ))
-        .add_plugins(DemoGamePlugin {
-            show_inspector: false,
-        })
         .add_systems(Update, test_assert)
         .run();
 }

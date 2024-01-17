@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use bevy::prelude::*;
 
+use crate::asserts::AsserterPlugin;
+
 mod playback;
 mod recording;
 
@@ -60,7 +62,8 @@ impl Plugin for PlaybackTestGear {
 
             app.add_plugins(recording::RecordingPlugin { script_path })
         }
-        .add_systems(First, set_first_update);
+        .add_systems(First, set_first_update)
+        .add_plugins(AsserterPlugin);
     }
 }
 
