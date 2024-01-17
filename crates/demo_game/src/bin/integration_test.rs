@@ -10,7 +10,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            PlaybackTestGear::new("controller".into(), env::var("CI").is_ok()),
+            PlaybackTestGear::new(env::var("BITT_SCRIPT").unwrap(), env::var("CI").is_ok()),
             AsserterPlugin,
         ))
         .add_plugins(DemoGamePlugin {

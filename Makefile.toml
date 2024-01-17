@@ -37,12 +37,13 @@ args = ["run", "--bin", "main"]
 
 [tasks.keyboard_integration_test]
 command = "cargo"
-args = ["run", "--bin", "keyboard_integration_test"]
-
+env = { "BITT_SCRIPT" = "keyboard" }
+args = ["run", "--bin", "integration_test"]
 
 [tasks.controller_integration_test]
 command = "cargo"
-args = ["run", "--bin", "controller_integration_test"]
+env = { "BITT_SCRIPT" = "controller" }
+args = ["run", "--bin", "integration_test"]
 
 [tasks.integration_test]
 run_task = { name = [
