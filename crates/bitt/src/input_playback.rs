@@ -30,6 +30,7 @@ enum UserInput {
     ControllerAxisChange(GamepadAxis, f32),
     ControllerButtonPress(GamepadButton),
     ControllerButtonRelease(GamepadButton),
+    MouseMove(Vec2),
     Quit,
 }
 

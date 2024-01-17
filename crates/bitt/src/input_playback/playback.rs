@@ -6,7 +6,10 @@ use std::{
 
 use bevy::{
     app::AppExit,
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
+        mouse::MouseMotion,
+    },
     prelude::*,
     render::view::screenshot::ScreenshotManager,
     utils::HashSet,
@@ -115,6 +118,7 @@ fn script_player(
     mut mouse_buttons: ResMut<Input<MouseButton>>,
     mut pad_buttons: ResMut<Input<GamepadButton>>,
     mut axis: ResMut<Axis<GamepadAxis>>,
+    mut mouse_movements: EventWriter<MouseMotion>,
     first_update: Option<Res<FirstUpdate>>,
 ) {
     let Some(start_time) = first_update else {
@@ -138,6 +142,7 @@ fn script_player(
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
             }
+            UserInput::MouseMove(amount) => mouse_movements.send(MouseMotion { delta: *amount }),
             UserInput::Quit => quit_events.send(StartAsserting),
         }
     }

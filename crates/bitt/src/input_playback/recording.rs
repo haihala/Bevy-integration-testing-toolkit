@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use bevy::{app::AppExit, prelude::*, utils::HashMap};
+use bevy::{app::AppExit, input::mouse::MouseMotion, prelude::*, utils::HashMap};
 
 use crate::Asserter;
 
@@ -38,6 +38,7 @@ fn script_recorder(
     mouse_buttons: Res<Input<MouseButton>>,
     pad_buttons: Res<Input<GamepadButton>>,
     axis: Res<Axis<GamepadAxis>>,
+    mut motion_evr: EventReader<MouseMotion>,
     mut axis_cache: Local<HashMap<GamepadAxis, f32>>,
 ) {
     let Some(start_time) = first_update else {
@@ -95,6 +96,12 @@ fn script_recorder(
                     .push((timestamp, UserInput::ControllerAxisChange(*dev, value)));
             }
         }
+    }
+
+    for motion in motion_evr.read() {
+        script
+            .events
+            .push((timestamp, UserInput::MouseMove(motion.delta)));
     }
 }
 
