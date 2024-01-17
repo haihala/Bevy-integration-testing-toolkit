@@ -97,10 +97,10 @@ fn detect_collisions(
         )
         .is_some()
     {
-        commands.spawn((AudioBundle {
+        commands.spawn(AudioBundle {
             source: reused_assets.pling.clone(),
             ..default()
-        },));
+        });
 
         star_tf.translation.x = next_star_x;
         let (mut text, mut points) = points.single_mut();
