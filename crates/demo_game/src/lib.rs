@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bitt::Asserter;
 
 mod assets;
 mod player;
 mod star;
 mod world;
 
+pub use star::Points;
+
 #[derive(Debug, Default)]
 pub struct DemoGamePlugin {
     pub show_inspector: bool,
-    pub insert_test_system: bool,
 }
 
 impl Plugin for DemoGamePlugin {
@@ -19,21 +19,11 @@ impl Plugin for DemoGamePlugin {
             app.add_plugins(WorldInspectorPlugin::new());
         }
 
-        if self.insert_test_system {
-            app.add_systems(Last, test_assert);
-        }
-
         app.add_plugins((
             player::PlayerPlugin,
             world::PhysicsPlugin,
             assets::CustomAssetsPlugin,
             star::StarPlugin,
         ));
-    }
-}
-
-fn test_assert(score: Query<&star::Points>, mut asserter: ResMut<Asserter>) {
-    if score.single().0 == 2 {
-        asserter.pass();
     }
 }

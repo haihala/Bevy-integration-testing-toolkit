@@ -40,7 +40,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         Player,
         Name::new("Player"),
-        RigidBody::KinematicPositionBased,
+        RigidBody::KinematicVelocityBased,
         KinematicCharacterController {
             filter_flags: QueryFilterFlags::EXCLUDE_SENSORS,
             ..default()
