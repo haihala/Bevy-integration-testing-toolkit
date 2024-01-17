@@ -6,7 +6,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use bevy::prelude::*;
+use bevy::{input::mouse::MouseWheel, prelude::*};
 
 use crate::asserts::AsserterPlugin;
 
@@ -30,6 +30,7 @@ enum UserInput {
     ControllerAxisChange(GamepadAxis, f32),
     ControllerButtonPress(GamepadButton),
     ControllerButtonRelease(GamepadButton),
+    MouseScroll(MouseWheel),
     MouseMove(Vec2),
     Quit,
 }

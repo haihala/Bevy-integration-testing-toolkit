@@ -8,7 +8,7 @@ use bevy::{
     app::AppExit,
     input::{
         gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
-        mouse::MouseMotion,
+        mouse::{MouseMotion, MouseWheel},
     },
     prelude::*,
     render::view::screenshot::ScreenshotManager,
@@ -118,6 +118,7 @@ fn script_player(
     mut mouse_buttons: ResMut<Input<MouseButton>>,
     mut pad_buttons: ResMut<Input<GamepadButton>>,
     mut axis: ResMut<Axis<GamepadAxis>>,
+    mut mouse_scroll: EventWriter<MouseWheel>,
     mut mouse_movements: EventWriter<MouseMotion>,
     first_update: Option<Res<FirstUpdate>>,
 ) {
@@ -142,6 +143,7 @@ fn script_player(
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
             }
+            UserInput::MouseScroll(scroll) => mouse_scroll.send(*scroll),
             UserInput::MouseMove(amount) => mouse_movements.send(MouseMotion { delta: *amount }),
             UserInput::Quit => quit_events.send(StartAsserting),
         }
