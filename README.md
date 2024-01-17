@@ -29,12 +29,14 @@ Warnings:
 
 - Currently, natural inputs **are** still listened to while in playback mode. This can cause tests to fail when
   they shouldn't. This will be fixed in the future.
-- Running things in CI may not work exactly like it does locally. For example, the github action runner cannot play
-  audio, which may cause differing behavior if something in your game reacts to audio clips starting or ending.
+- Running things in CI may not work exactly like it does locally.
+  - Github action runner can't play audio, which may cause differing behavior.
+  - CI may run at a different, usually lower framerate
 - Ironically, the framwork isn't that well tested as of yet. It's possible that it may not work on your system.
   If you have any issues, please open an issue on github.
 
 Recommendations:
 
+- Put `bitt/test_scripts` in the repo, but gitignore `bitt/artefacts`.
 - Use `cargo-make` to run the integration tests
 - Use `clap` to parse command line arguments instead of using env vars to select test cases
