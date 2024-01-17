@@ -1,9 +1,13 @@
 [package]
 name = "bitt"
+description = "Bevy integration testing toolkit"
+repository = "https://github.com/haihala/Bevy-integration-testing-toolkit"
 version = "0.1.0"
 edition = "2021"
+license-file = "../../LICENSE"
+readme = "../../README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+keywords = ["bevy", "testing"]
 
 [dependencies]
 bevy = { workspace = true }
