@@ -35,6 +35,7 @@ enum UserInput {
     Quit,
 }
 
+/// Plugin that once inserted will perform playback testing.
 #[derive(Debug)]
 pub struct PlaybackTestGear {
     case_name: String,
@@ -42,6 +43,10 @@ pub struct PlaybackTestGear {
 }
 
 impl PlaybackTestGear {
+    /// Creates a new instance of the plugin.
+    /// `case_name` is the name of the test case to run.
+    /// `read_only` is whether the test should be run in read-only mode. Useful for CI so you don't accidentally wait for input.
+    /// If `read_only` is `true` and the test script doesn't exist, the test will fail.
     pub fn new(case_name: String, read_only: bool) -> Self {
         Self {
             case_name,
