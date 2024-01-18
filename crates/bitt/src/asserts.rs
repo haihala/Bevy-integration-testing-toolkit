@@ -2,12 +2,20 @@ use bevy::prelude::*;
 
 #[derive(Resource, Debug, Default)]
 pub struct Asserter {
-    pub(crate) passed: bool,
+    pub(crate) outcome: Option<bool>,
 }
 
 impl Asserter {
     pub fn pass(&mut self) {
-        self.passed = true;
+        if self.outcome.is_none() {
+            self.outcome = Some(true);
+        }
+    }
+
+    pub fn fail(&mut self) {
+        if self.outcome.is_none() {
+            self.outcome = Some(false);
+        }
     }
 }
 

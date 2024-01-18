@@ -127,7 +127,7 @@ fn recording_asserter(
         if timer.tick(time.delta()).just_finished() {
             quit_events.send(SaveQuitEvent);
         }
-    } else if asserter.passed {
+    } else if asserter.outcome == Some(true) {
         *delay = Some(Timer::from_seconds(0.2, TimerMode::Once));
     }
 }

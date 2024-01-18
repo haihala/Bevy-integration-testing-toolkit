@@ -199,10 +199,10 @@ fn run_asserts(
     mut started: Local<Option<Timer>>,
 ) {
     if let Some(ref mut start_time) = *started {
-        if asserter.passed {
+        if asserter.outcome == Some(true) {
             result_writer.send(TestQuitEvent(true));
             *started = None;
-        } else if start_time.tick(time.delta()).just_finished() {
+        } else if asserter.outcome == Some(false) || start_time.tick(time.delta()).just_finished() {
             result_writer.send(TestQuitEvent(false));
             *started = None;
         }
