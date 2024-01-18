@@ -40,3 +40,15 @@ Recommendations:
 - Put `bitt/test_scripts` in the repo, but gitignore `bitt/artefacts`.
 - Use `cargo-make` to run the integration tests
 - Use `clap` to parse command line arguments instead of using env vars to select test cases
+
+# Feedback and contributing
+
+Feedback and contributions are welcome. Please open an issue on github if you have any feedback or suggestions. Some ideas I've had:
+
+- Fake a window to maybe parallelize tests locally
+- Artefacts
+  - Video
+  - Performance metrics
+- Inbuilt sharding method so that several runners can run tests in parallel
+
+You can also find me on the bevy discord as `@hajhawa`.
