@@ -16,7 +16,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::Asserter;
+use crate::{Asserter, PlaybackTestingOptions};
 
 use super::{FirstUpdate, TestScript, UserInput};
 
@@ -196,6 +196,7 @@ fn run_asserts(
     mut result_writer: EventWriter<TestQuitEvent>,
     time: Res<Time<Real>>,
     asserter: Res<Asserter>,
+    options: Res<PlaybackTestingOptions>,
     mut started: Local<Option<Timer>>,
 ) {
     if let Some(ref mut start_time) = *started {
@@ -207,7 +208,7 @@ fn run_asserts(
             *started = None;
         }
     } else if start_events.read().next().is_some() {
-        *started = Some(Timer::from_seconds(5.0, TimerMode::Once));
+        *started = Some(Timer::from_seconds(options.assert_window, TimerMode::Once));
     }
 }
 

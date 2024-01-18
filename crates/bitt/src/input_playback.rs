@@ -35,23 +35,38 @@ enum UserInput {
     Quit,
 }
 
+/// Options to use when running playback testing.
+/// Inserted as a resource for test gear usage, you shouldn't modify it
+#[derive(Debug, Resource, Clone)]
+pub struct PlaybackTestingOptions {
+    /// If true, the test will panic if the script doesn't exist.
+    pub read_only: bool,
+    /// The amount of seconds to wait for the asserter to pass after input ends.
+    pub assert_window: f32,
+}
+
+impl Default for PlaybackTestingOptions {
+    fn default() -> Self {
+        Self {
+            read_only: false,
+            assert_window: 5.0,
+        }
+    }
+}
+
 /// Plugin that once inserted will perform playback testing.
 #[derive(Debug)]
 pub struct PlaybackTestGear {
     case_name: String,
-    read_only: bool,
+    options: PlaybackTestingOptions,
 }
 
 impl PlaybackTestGear {
     /// Creates a new instance of the plugin.
     /// `case_name` is the name of the test case to run.
-    /// `read_only` is whether the test should be run in read-only mode. Useful for CI so you don't accidentally wait for input.
-    /// If `read_only` is `true` and the test script doesn't exist, the test will fail.
-    pub fn new(case_name: String, read_only: bool) -> Self {
-        Self {
-            case_name,
-            read_only,
-        }
+    /// `options` are the options to use when running the test.
+    pub fn new(case_name: String, options: PlaybackTestingOptions) -> Self {
+        Self { case_name, options }
     }
 }
 
@@ -65,11 +80,16 @@ impl Plugin for PlaybackTestGear {
                 artefact_path,
             })
         } else {
-            assert!(!self.read_only, "Script {} doesn't exist", self.case_name);
+            assert!(
+                !self.options.read_only,
+                "Script {} doesn't exist",
+                self.case_name
+            );
 
             app.add_plugins(recording::RecordingPlugin { script_path })
         }
         .add_systems(First, set_first_update)
+        .insert_resource(self.options.clone())
         .add_plugins(AsserterPlugin);
     }
 }
