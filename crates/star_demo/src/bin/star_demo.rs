@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use demo_game::DemoGamePlugin;
+use star_demo::DemoGamePlugin;
 
 fn main() {
     App::new()

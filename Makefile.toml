@@ -30,20 +30,20 @@ args = ["udeps"]
 [tasks.validate]
 run_task = { name = ["format", "clippy", "test", "udeps"] }
 
-[tasks.demo_game]
+[tasks.star_demo]
 command = "cargo"
-args = ["run", "--bin", "main"]
+args = ["run", "--bin", "star_demo"]
 
 
 [tasks.keyboard_integration_test]
 command = "cargo"
 env = { "BITT_SCRIPT" = "keyboard" }
-args = ["run", "--bin", "integration_test"]
+args = ["run", "--bin", "star_test"]
 
 [tasks.controller_integration_test]
 command = "cargo"
 env = { "BITT_SCRIPT" = "controller" }
-args = ["run", "--bin", "integration_test"]
+args = ["run", "--bin", "star_test"]
 
 [tasks.integration_test]
 run_task = { name = [

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use bitt::{Asserter, PlaybackTestGear, PlaybackTestingOptions};
 
-use demo_game::{DemoGamePlugin, Points};
+use star_demo::{DemoGamePlugin, Points};
 
 fn main() {
     let script = env::var("BITT_SCRIPT").unwrap();
