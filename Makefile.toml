@@ -51,6 +51,14 @@ run_task = { name = [
     "keyboard_integration_test",
 ] }
 
+[tasks.headless_integration_test]
+run_task = "integration_test"
+env = { "HEADLESS" = "true" }
+
 [tasks.ci_integration_test]
 run_task = "integration_test"
 env = { "CI" = "true" }
+
+[tasks.headless_ci_integration_test]
+run_task = "integration_test"
+env = { "HEADLESS" = "true", "CI" = "true" }

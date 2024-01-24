@@ -46,7 +46,7 @@ Recommendations:
 
 Feedback and contributions are welcome. Please open an issue on github if you have any feedback or suggestions. Some ideas I've had:
 
-- Fake a window to maybe parallelize tests locally
+- Parallelize headless tests
 - Inbuilt sharding method so that several runners can run tests in parallel
 - Record video of the test run
 

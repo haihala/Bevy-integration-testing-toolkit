@@ -4,6 +4,7 @@ use std::{fs::File, path::PathBuf};
 #[derive(Debug, Resource)]
 pub(crate) struct ArtefactPaths {
     pub(crate) base: PathBuf,
+    pub(crate) running_headless: bool,
 }
 
 impl ArtefactPaths {
@@ -20,8 +21,8 @@ impl ArtefactPaths {
     }
 
     pub fn saved(&self) -> bool {
-        Self::file_saved(self.pre_assert_screenshot())
-            && Self::file_saved(self.post_assert_screenshot())
+        (self.running_headless || Self::file_saved(self.pre_assert_screenshot()))
+            && (self.running_headless || Self::file_saved(self.post_assert_screenshot()))
             && Self::file_saved(self.frame_metrics())
     }
 

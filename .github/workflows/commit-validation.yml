@@ -40,3 +40,20 @@ jobs:
         with:
           name: integration-test-artefacts
           path: bitt/artefacts
+
+  headless-integration-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: davidB/rust-cargo-make@v1
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run integration tests
+        run: cargo make headless_ci_integration_test
+
+      - name: Save artefacts
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: headless-integration-test-artefacts
+          path: bitt/artefacts

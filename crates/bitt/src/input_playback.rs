@@ -62,6 +62,9 @@ impl Default for PlaybackTestingOptions {
 }
 
 /// Plugin that once inserted will perform playback testing.
+///
+/// **IMPORTANT**: If you are are also using `bitt::HeadlessDefaultPlugins`,
+/// this plugin must be inserted **after** that one to correctly detect a missing window.
 #[derive(Debug)]
 pub struct PlaybackTestGear {
     case_name: String,

@@ -30,10 +30,19 @@ pub(crate) struct PlaybackPlugin {
 
 impl Plugin for PlaybackPlugin {
     fn build(&self, app: &mut App) {
+        // This is a bit wonky, as it depends on the order the plugins get added
+        let running_headless = app
+            .world
+            .query::<&PrimaryWindow>()
+            .iter(&app.world)
+            .next()
+            .is_none();
+
         app.insert_resource(self.script.clone())
             .add_systems(First, (connect_pads, script_player).chain())
             .insert_resource(ArtefactPaths {
                 base: self.artefact_path.clone(),
+                running_headless,
             })
             .add_event::<StartAsserting>()
             .add_event::<TestQuitEvent>()
@@ -152,9 +161,11 @@ fn pre_assert_screenshot(
         return;
     }
 
-    screenshot_manager
-        .save_screenshot_to_disk(main_window.single(), path.pre_assert_screenshot())
-        .unwrap();
+    if let Ok(win) = main_window.get_single() {
+        screenshot_manager
+            .save_screenshot_to_disk(win, path.pre_assert_screenshot())
+            .unwrap();
+    }
 
     *has_ran = true;
 }
@@ -169,9 +180,11 @@ fn post_assert_screenshot(
         return;
     }
 
-    screenshot_manager
-        .save_screenshot_to_disk(main_window.single(), path.post_assert_screenshot())
-        .unwrap();
+    if let Ok(win) = main_window.get_single() {
+        screenshot_manager
+            .save_screenshot_to_disk(win, path.post_assert_screenshot())
+            .unwrap();
+    }
 
     *has_ran = true;
 }
