@@ -10,7 +10,8 @@ Bitt, (Noun) a pair of posts on the deck of a ship for fastening mooring lines o
 
 At the moment, only record/playback testing is implemented. To use it, add a system to your app that calls
 `bitt::Asserter::pass` when a test case is passed. Also add the `bitt::PlaybackTestGear` plugin with the
-name of the test case you want to use. Your inputs and artefacts will be saved under this name in
+name of the test case you want to use and a `bitt::PlaybackTestingOptions` that configures the test gear.
+Your inputs and artefacts will be saved under this name in
 `bitt/test_scripts/<script name>.bitt_script` and `bitt/artefacts/<script name>` respectively.
 
 If you then launch the game, it should run normally until `bitt::Asserter::pass` is called, at which point
@@ -21,9 +22,9 @@ both before and after this window.
 
 For examples, see:
 
-- `crates/demo_game/bin/integration_test.rs` for how to use the input recording and playback.
+- `crates/star_demo/bin/star_test.rs` for how to use the input recording and playback.
 - `.github/workflows/commit-validation.yml` for how to run the integration tests in a github action.
-    - Including how to make the screenshots visible in the github action logs.
+    - Including how to make the artefacts visible in the github action logs.
 
 Warnings:
 
@@ -46,9 +47,7 @@ Recommendations:
 Feedback and contributions are welcome. Please open an issue on github if you have any feedback or suggestions. Some ideas I've had:
 
 - Fake a window to maybe parallelize tests locally
-- Artefacts
-  - Video
-  - Performance metrics
 - Inbuilt sharding method so that several runners can run tests in parallel
+- Record video of the test run
 
 You can also find me on the bevy discord as `@hajhawa`.
