@@ -1,5 +1,5 @@
 use std::{
-    fs::{create_dir_all, remove_dir_all, File},
+    fs::{create_dir_all, remove_dir_all},
     path::PathBuf,
     time::Duration,
 };
@@ -18,35 +18,10 @@ use bevy::{
 
 use crate::{Asserter, PlaybackTestingOptions};
 
-use super::{FirstUpdate, TestScript, UserInput};
-
-#[derive(Debug, Resource)]
-struct ArtefactPaths {
-    base: PathBuf,
-}
-impl ArtefactPaths {
-    fn pre_assert_screenshot(&self) -> PathBuf {
-        self.base.join("pre-assert.png")
-    }
-
-    fn post_assert_screenshot(&self) -> PathBuf {
-        self.base.join("post-assert.png")
-    }
-
-    fn saved(&self) -> bool {
-        Self::file_saved(self.pre_assert_screenshot())
-            && Self::file_saved(self.post_assert_screenshot())
-    }
-
-    fn file_saved(path: PathBuf) -> bool {
-        path.exists() && File::open(path.clone()).unwrap().metadata().unwrap().len() > 0
-    }
-}
+use super::{artefact_paths::ArtefactPaths, FirstUpdate, TestQuitEvent, TestScript, UserInput};
 
 #[derive(Debug, Clone, Copy, Event)]
 struct StartAsserting;
-#[derive(Debug, Clone, Copy, Event)]
-struct TestQuitEvent(bool);
 
 pub(crate) struct PlaybackPlugin {
     pub(crate) script: TestScript,
@@ -66,6 +41,7 @@ impl Plugin for PlaybackPlugin {
                 Update,
                 (
                     run_asserts,
+                    create_artefact_dir.run_if(on_event::<StartAsserting>()),
                     pre_assert_screenshot.run_if(on_event::<StartAsserting>()),
                     post_assert_screenshot.run_if(on_event::<TestQuitEvent>()),
                     delayed_exit,
@@ -152,6 +128,20 @@ fn script_player(
     *last_run = time.elapsed();
 }
 
+fn create_artefact_dir(path: Res<ArtefactPaths>, mut has_ran: Local<bool>) {
+    if *has_ran {
+        return;
+    }
+
+    if path.base.exists() {
+        remove_dir_all(path.base.clone()).unwrap();
+    }
+
+    create_dir_all(path.base.clone()).unwrap();
+
+    *has_ran = true;
+}
+
 fn pre_assert_screenshot(
     main_window: Query<Entity, With<PrimaryWindow>>,
     mut screenshot_manager: ResMut<ScreenshotManager>,
@@ -162,11 +152,6 @@ fn pre_assert_screenshot(
         return;
     }
 
-    if path.base.exists() {
-        remove_dir_all(path.base.clone()).unwrap();
-    }
-
-    create_dir_all(path.base.clone()).unwrap();
     screenshot_manager
         .save_screenshot_to_disk(main_window.single(), path.pre_assert_screenshot())
         .unwrap();

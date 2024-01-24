@@ -10,12 +10,15 @@ use bevy::{input::mouse::MouseWheel, prelude::*};
 
 use crate::asserts::AsserterPlugin;
 
+mod artefact_paths;
+mod frame_metrics;
 mod playback;
 mod recording;
 
 #[derive(Debug, Resource)]
 struct FirstUpdate(Duration);
-
+#[derive(Debug, Clone, Copy, Event)]
+struct TestQuitEvent(bool);
 #[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
 struct TestScript {
     events: Vec<(Duration, UserInput)>,
@@ -43,6 +46,9 @@ pub struct PlaybackTestingOptions {
     pub read_only: bool,
     /// The amount of seconds to wait for the asserter to pass after input ends.
     pub assert_window: f32,
+    /// If true, the test will collect frame metrics. There may be some overhead from the test gear
+    /// Some operations are performed sync and may create a long frame, but it should only land on one frame.
+    pub collect_frame_metrics: bool,
 }
 
 impl Default for PlaybackTestingOptions {
@@ -50,6 +56,7 @@ impl Default for PlaybackTestingOptions {
         Self {
             read_only: false,
             assert_window: 5.0,
+            collect_frame_metrics: true,
         }
     }
 }
@@ -75,6 +82,10 @@ impl Plugin for PlaybackTestGear {
         let (script_path, artefact_path) = get_paths(self.case_name.clone());
 
         if let Some(script) = load_script(&script_path) {
+            if self.options.collect_frame_metrics {
+                app.add_plugins(frame_metrics::FrameMetricPlugin);
+            }
+
             app.add_plugins(playback::PlaybackPlugin {
                 script,
                 artefact_path,
