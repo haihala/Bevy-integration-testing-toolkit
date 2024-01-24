@@ -21,8 +21,9 @@ impl ArtefactPaths {
     }
 
     pub fn saved(&self) -> bool {
-        (self.running_headless || Self::file_saved(self.pre_assert_screenshot()))
-            && (self.running_headless || Self::file_saved(self.post_assert_screenshot()))
+        (self.running_headless
+            || (Self::file_saved(self.pre_assert_screenshot())
+                && Self::file_saved(self.post_assert_screenshot())))
             && Self::file_saved(self.frame_metrics())
     }
 
