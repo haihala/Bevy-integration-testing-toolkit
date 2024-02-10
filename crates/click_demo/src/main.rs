@@ -7,12 +7,11 @@ use click_demo::{ClickDemoPlugin, Points};
 enum IntegrationTestScript {
     ThreeClicks,
 }
-impl IntegrationTestScript {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for IntegrationTestScript {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            IntegrationTestScript::ThreeClicks => "three-clicks",
+            IntegrationTestScript::ThreeClicks => write!(f, "three-clicks"),
         }
-        .to_string()
     }
 }
 
