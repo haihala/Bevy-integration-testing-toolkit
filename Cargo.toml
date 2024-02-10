@@ -5,10 +5,15 @@ members = ["crates/*"]
 [workspace.dependencies]
 bevy = { version = "0.12.0", features = ["serialize"] }
 
-# Test game
+# Test games
 bevy-inspector-egui = "0.21.0"
+
+# Star tests game
 leafwing-input-manager = "0.11.1"
 bevy_rapier2d = { version = "0.23.0", features = ["simd-stable"] }
+
+# Clicker tests game
+clap = { version = "4.5.0", features = ["derive"] }
 
 # Testing framework
 serde_json = "1.0.64"
