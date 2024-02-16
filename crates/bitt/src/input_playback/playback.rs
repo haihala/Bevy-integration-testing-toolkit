@@ -9,6 +9,7 @@ use bevy::{
     input::{
         gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
         mouse::{MouseMotion, MouseWheel},
+        InputSystem,
     },
     prelude::*,
     render::view::screenshot::ScreenshotManager,
@@ -39,7 +40,10 @@ impl Plugin for PlaybackPlugin {
             .is_none();
 
         app.insert_resource(self.script.clone())
-            .add_systems(First, (connect_pads, script_player).chain())
+            .add_systems(
+                PreUpdate,
+                (connect_pads, script_player).chain().after(InputSystem),
+            )
             .insert_resource(ArtefactPaths {
                 base: self.artefact_path.clone(),
                 running_headless,
@@ -97,6 +101,7 @@ fn connect_pads(
 fn script_player(
     mut last_run: Local<Duration>,
     time: Res<Time<Real>>,
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     script: Res<TestScript>,
     mut quit_events: EventWriter<StartAsserting>,
     mut kb_input: ResMut<Input<KeyCode>>,
@@ -129,7 +134,12 @@ fn script_player(
                 axis.set(*key, *value);
             }
             UserInput::MouseScroll(scroll) => mouse_scroll.send(*scroll),
-            UserInput::MouseMove(amount) => mouse_movements.send(MouseMotion { delta: *amount }),
+            UserInput::MouseMove(delta, position) => {
+                mouse_movements.send(MouseMotion { delta: *delta });
+                if let Ok(ref mut window) = window_query.get_single_mut() {
+                    window.set_cursor_position(*position);
+                }
+            }
             UserInput::Quit => quit_events.send(StartAsserting),
         }
     }

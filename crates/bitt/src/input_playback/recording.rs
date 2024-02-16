@@ -8,6 +8,7 @@ use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
     utils::HashMap,
+    window::PrimaryWindow,
 };
 
 use crate::Asserter;
@@ -46,6 +47,7 @@ fn script_recorder(
     mut scroll_evr: EventReader<MouseWheel>,
     mut motion_evr: EventReader<MouseMotion>,
     mut axis_cache: Local<HashMap<GamepadAxis, f32>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     let Some(start_time) = first_update else {
         return;
@@ -110,10 +112,13 @@ fn script_recorder(
             .push((timestamp, UserInput::MouseScroll(*scroll)));
     }
 
+    let window = window_query.single();
+    let cursor_pos = window.cursor_position();
+
     for motion in motion_evr.read() {
         script
             .events
-            .push((timestamp, UserInput::MouseMove(motion.delta)));
+            .push((timestamp, UserInput::MouseMove(motion.delta, cursor_pos)));
     }
 }
 

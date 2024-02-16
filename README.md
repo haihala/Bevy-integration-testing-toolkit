@@ -22,11 +22,16 @@ both before and after this window.
 
 For examples, see:
 
-- `crates/star_demo/bin/star_test.rs` for how to use the input recording and playback.
+- `crates/star_demo/src/bin/star_test.rs` for how to use the input recording and playback for keyboard/controller inputs.
+  - Uses env vars to select the test case to run and other parameters.
+  - Separate binary file for tests.
+- `crates/click_demo/src/main.rs` for a different approach to playback testing a mouse driven game.
+  - Uses clap to select the test case to run and other parameters.
+  - Same binary file for tests and normal runs.
 - `.github/workflows/commit-validation.yml` for how to run the integration tests in a github action.
     - Including how to make the artefacts visible in the github action logs.
 
-Warnings:
+Warnings and caveats:
 
 - Currently, natural inputs **are** still listened to while in playback mode. This can cause tests to fail when
   they shouldn't. This will be fixed in the future.
@@ -35,6 +40,8 @@ Warnings:
   - CI may run at a different, usually lower framerate
 - Ironically, the framwork isn't that well tested as of yet. It's possible that it may not work on your system.
   If you have any issues, please open an issue on github.
+- Bevy stores mouse position in the window. This means that any tests that care about mouse movements will likely
+  not work in headless mode.
 
 Recommendations:
 

@@ -34,7 +34,7 @@ enum UserInput {
     ControllerButtonPress(GamepadButton),
     ControllerButtonRelease(GamepadButton),
     MouseScroll(MouseWheel),
-    MouseMove(Vec2),
+    MouseMove(Vec2, Option<Vec2>),
     Quit,
 }
 
