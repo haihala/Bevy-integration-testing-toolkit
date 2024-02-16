@@ -6,11 +6,11 @@ members = ["crates/*"]
 bevy = { version = "0.12.0", features = ["serialize"] }
 
 # Test games
-bevy-inspector-egui = "0.21.0"
+bevy-inspector-egui = "0.22.1"
 
 # Star tests game
 leafwing-input-manager = "0.11.1"
-bevy_rapier2d = { version = "0.23.0", features = ["simd-stable"] }
+bevy_rapier2d = { version = "0.24.0", features = ["simd-stable"] }
 
 # Clicker tests game
 clap = { version = "4.5.0", features = ["derive"] }
