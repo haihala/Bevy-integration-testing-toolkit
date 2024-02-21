@@ -4,8 +4,6 @@ Tool for integration testing apps built in the bevy game engine.
 
 Bitt, (Noun) a pair of posts on the deck of a ship for fastening mooring lines or cables.
 
-⚠️ Very much a work in progress.
-
 ## How to use
 
 At the moment, only record/playback testing is implemented. To use it, add a system to your app that calls
@@ -58,3 +56,12 @@ Feedback and contributions are welcome. Please open an issue on github if you ha
 - Record video of the test run
 
 You can also find me on the bevy discord as `@hajhawa`.
+
+# Version table
+
+| BITT version | Bevy version |
+| ------------ | ------------ |
+| 0.3          | 0.12         |
+| 0.4          | 0.13         |
+
+You may need to re-record your tests when upgrading to a new version of Bevy.

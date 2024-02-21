@@ -31,11 +31,11 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             // Stores "which actions are currently pressed"
             action_state: ActionState::default(),
             // Describes how to convert from player inputs into those actions
-            input_map: InputMap::new([(KeyCode::Space, Action::Jump)])
-                .insert(VirtualDPad::arrow_keys(), Action::Move)
-                .insert(GamepadButtonType::South, Action::Jump)
-                .insert(DualAxis::left_stick(), Action::Move)
-                .insert(MouseButton::Left, Action::Click)
+            input_map: InputMap::new([(Action::Jump, KeyCode::Space)])
+                .insert(Action::Move, VirtualDPad::arrow_keys())
+                .insert(Action::Jump, GamepadButtonType::South)
+                .insert(Action::Move, DualAxis::left_stick())
+                .insert(Action::Click, MouseButton::Left)
                 .build(),
         },
         Player,
@@ -67,14 +67,14 @@ fn player_input(
 ) {
     let (mut character_controller, action_state) = query.single_mut();
 
-    if action_state.just_pressed(Action::Click) {
+    if action_state.just_pressed(&Action::Click) {
         commands.spawn(AudioBundle {
             source: reused_assets.click.clone(),
             ..default()
         });
     }
 
-    if action_state.just_pressed(Action::Jump) {
+    if action_state.just_pressed(&Action::Jump) {
         *jump_shift = 500.0;
         commands.spawn(AudioBundle {
             source: reused_assets.hop.clone(),
@@ -87,7 +87,7 @@ fn player_input(
 
     character_controller.translation = Some(
         Vec2::new(
-            action_state.axis_pair(Action::Move).unwrap().x() * 300.0,
+            action_state.axis_pair(&Action::Move).unwrap().x() * 300.0,
             *jump_shift,
         ) * time.delta_seconds(),
     );

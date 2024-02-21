@@ -1,4 +1,8 @@
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle, window::PrimaryWindow};
+use bevy::{
+    prelude::*,
+    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+    window::PrimaryWindow,
+};
 
 pub struct ClickDemoPlugin;
 
@@ -32,7 +36,7 @@ fn setup(
 
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(50.0).into()).into(),
+            mesh: Mesh2dHandle(meshes.add(Circle { radius: 50.0 })),
             material: materials.add(ColorMaterial::from(Color::PURPLE)),
             ..default()
         },
@@ -99,7 +103,7 @@ fn setup(
 }
 
 fn register_clicks(
-    buttons: Res<Input<MouseButton>>,
+    buttons: Res<ButtonInput<MouseButton>>,
     mut points: ResMut<Points>,
     clickable_query: Query<&Transform, With<Clickable>>,
     window_query: Query<&Window, With<PrimaryWindow>>,

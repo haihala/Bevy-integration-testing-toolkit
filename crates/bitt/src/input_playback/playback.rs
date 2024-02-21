@@ -104,9 +104,9 @@ fn script_player(
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     script: Res<TestScript>,
     mut quit_events: EventWriter<StartAsserting>,
-    mut kb_input: ResMut<Input<KeyCode>>,
-    mut mouse_buttons: ResMut<Input<MouseButton>>,
-    mut pad_buttons: ResMut<Input<GamepadButton>>,
+    mut kb_input: ResMut<ButtonInput<KeyCode>>,
+    mut mouse_buttons: ResMut<ButtonInput<MouseButton>>,
+    mut pad_buttons: ResMut<ButtonInput<GamepadButton>>,
     mut axis: ResMut<Axis<GamepadAxis>>,
     mut mouse_scroll: EventWriter<MouseWheel>,
     mut mouse_movements: EventWriter<MouseMotion>,
@@ -133,14 +133,18 @@ fn script_player(
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
             }
-            UserInput::MouseScroll(scroll) => mouse_scroll.send(*scroll),
+            UserInput::MouseScroll(scroll) => {
+                mouse_scroll.send(*scroll);
+            }
             UserInput::MouseMove(delta, position) => {
                 mouse_movements.send(MouseMotion { delta: *delta });
                 if let Ok(ref mut window) = window_query.get_single_mut() {
                     window.set_cursor_position(*position);
                 }
             }
-            UserInput::Quit => quit_events.send(StartAsserting),
+            UserInput::Quit => {
+                quit_events.send(StartAsserting);
+            }
         }
     }
 
