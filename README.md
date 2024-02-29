@@ -4,6 +4,8 @@ Tool for integration testing apps built in the bevy game engine.
 
 Bitt, (Noun) a pair of posts on the deck of a ship for fastening mooring lines or cables.
 
+[Documentation](https://docs.rs/bitt/) [crates.io](https://crates.io/crates/bitt)
+
 ## How to use
 
 At the moment, only record/playback testing is implemented. To use it, add a system to your app that calls
