@@ -61,9 +61,9 @@ You can also find me on the bevy discord as `@hajhawa`.
 
 # Version table
 
-| BITT version | Bevy version |
+| Bevy version | BITT version |
 | ------------ | ------------ |
-| 0.3          | 0.12         |
-| 0.4          | 0.13         |
+| 0.13         | 0.4          |
+| 0.12         | 0.3          |
 
 You may need to re-record your tests when upgrading to a new version of Bevy.
