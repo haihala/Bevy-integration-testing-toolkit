@@ -7,7 +7,10 @@ use std::{
 use bevy::{
     app::AppExit,
     input::{
-        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadEvent, GamepadInfo},
+        gamepad::{
+            GamepadAxisChangedEvent, GamepadButtonChangedEvent, GamepadConnection,
+            GamepadConnectionEvent, GamepadEvent, GamepadInfo,
+        },
         mouse::{MouseMotion, MouseWheel},
         InputSystem,
     },
@@ -111,6 +114,7 @@ fn script_player(
     mut mouse_scroll: EventWriter<MouseWheel>,
     mut mouse_movements: EventWriter<MouseMotion>,
     first_update: Option<Res<FirstUpdate>>,
+    mut gamepad_event_writer: EventWriter<GamepadEvent>,
 ) {
     let Some(start_time) = first_update else {
         return;
@@ -128,10 +132,29 @@ fn script_player(
             UserInput::KeyRelese(key) => kb_input.release(*key),
             UserInput::MouseButtonPress(button) => mouse_buttons.press(*button),
             UserInput::MouseButtonRelease(button) => mouse_buttons.release(*button),
-            UserInput::ControllerButtonPress(button) => pad_buttons.press(*button),
-            UserInput::ControllerButtonRelease(button) => pad_buttons.release(*button),
+            UserInput::ControllerButtonPress(button) => {
+                pad_buttons.press(*button);
+                gamepad_event_writer.send(GamepadEvent::Button(GamepadButtonChangedEvent {
+                    value: 1.0,
+                    button_type: button.button_type,
+                    gamepad: button.gamepad,
+                }));
+            }
+            UserInput::ControllerButtonRelease(button) => {
+                pad_buttons.release(*button);
+                gamepad_event_writer.send(GamepadEvent::Button(GamepadButtonChangedEvent {
+                    value: 0.0,
+                    button_type: button.button_type,
+                    gamepad: button.gamepad,
+                }));
+            }
             UserInput::ControllerAxisChange(key, value) => {
                 axis.set(*key, *value);
+                gamepad_event_writer.send(GamepadEvent::Axis(GamepadAxisChangedEvent {
+                    gamepad: key.gamepad,
+                    value: *value,
+                    axis_type: key.axis_type,
+                }));
             }
             UserInput::MouseScroll(scroll) => {
                 mouse_scroll.send(*scroll);
