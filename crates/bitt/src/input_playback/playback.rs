@@ -56,10 +56,10 @@ impl Plugin for PlaybackPlugin {
             .add_systems(
                 Update,
                 (
-                    run_asserts,
                     create_artefact_dir.run_if(on_event::<StartAsserting>()),
                     pre_assert_screenshot.run_if(on_event::<StartAsserting>()),
                     post_assert_screenshot.run_if(on_event::<TestQuitEvent>()),
+                    run_asserts,
                     delayed_exit,
                 )
                     .chain(),
