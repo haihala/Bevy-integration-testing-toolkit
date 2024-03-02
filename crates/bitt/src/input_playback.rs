@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use bevy::{input::mouse::MouseWheel, prelude::*};
 
-use crate::asserts::AsserterPlugin;
+use crate::TestWrangler;
 
 mod artefact_paths;
 mod frame_metrics;
@@ -16,7 +16,7 @@ mod playback;
 mod recording;
 
 #[derive(Debug, Resource)]
-struct FirstUpdate(Duration);
+struct StartTime(Duration);
 #[derive(Debug, Clone, Copy, Event)]
 struct TestQuitEvent(bool);
 #[derive(Serialize, Deserialize, Debug, Clone, Default, Resource)]
@@ -49,6 +49,11 @@ pub struct PlaybackTestingOptions {
     /// If true, the test will collect frame metrics. There may be some overhead from the test gear
     /// Some operations are performed sync and may create a long frame, but it should only land on one frame.
     pub collect_frame_metrics: bool,
+    /// By default, BITT automatically starts recording or playback from first update, but in some games it
+    /// takes a few update cycles for all of the assets to load and the game to actually be ready.
+    /// This takes more time on less powerful hardware, for example in CI, so if that is a problem you can
+    /// set this to false and manually call `TestWrangler::start` through the TestWrangler resource.
+    pub manual_start: bool,
 }
 
 impl Default for PlaybackTestingOptions {
@@ -57,6 +62,7 @@ impl Default for PlaybackTestingOptions {
             read_only: false,
             assert_window: 5.0,
             collect_frame_metrics: true,
+            manual_start: false,
         }
     }
 }
@@ -102,19 +108,35 @@ impl Plugin for PlaybackTestGear {
 
             app.add_plugins(recording::RecordingPlugin { script_path })
         }
-        .add_systems(First, set_first_update)
         .insert_resource(self.options.clone())
-        .add_plugins(AsserterPlugin);
+        .init_resource::<TestWrangler>();
+
+        if self.options.manual_start {
+            app.add_systems(First, set_start_time_manual);
+        } else {
+            app.add_systems(First, set_start_time_automatic);
+        }
     }
 }
 
-fn set_first_update(
+fn set_start_time_automatic(
     mut commands: Commands,
     time: Res<Time<Real>>,
-    first_update: Option<Res<FirstUpdate>>,
+    start_time: Option<Res<StartTime>>,
 ) {
-    if first_update.is_none() {
-        commands.insert_resource(FirstUpdate(time.elapsed()));
+    if start_time.is_none() {
+        commands.insert_resource(StartTime(time.elapsed()));
+    }
+}
+
+fn set_start_time_manual(
+    mut commands: Commands,
+    time: Res<Time<Real>>,
+    start_time: Option<Res<StartTime>>,
+    wrangler: Res<TestWrangler>,
+) {
+    if start_time.is_none() && wrangler.started {
+        commands.insert_resource(StartTime(time.elapsed()));
     }
 }
 

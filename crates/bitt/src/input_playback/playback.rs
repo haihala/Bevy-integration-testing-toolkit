@@ -20,9 +20,9 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::{Asserter, PlaybackTestingOptions};
+use crate::{PlaybackTestingOptions, TestWrangler};
 
-use super::{artefact_paths::ArtefactPaths, FirstUpdate, TestQuitEvent, TestScript, UserInput};
+use super::{artefact_paths::ArtefactPaths, StartTime, TestQuitEvent, TestScript, UserInput};
 
 #[derive(Debug, Clone, Copy, Event)]
 struct StartAsserting;
@@ -113,7 +113,7 @@ fn script_player(
     mut axis: ResMut<Axis<GamepadAxis>>,
     mut mouse_scroll: EventWriter<MouseWheel>,
     mut mouse_movements: EventWriter<MouseMotion>,
-    first_update: Option<Res<FirstUpdate>>,
+    first_update: Option<Res<StartTime>>,
     mut gamepad_event_writer: EventWriter<GamepadEvent>,
 ) {
     let Some(start_time) = first_update else {
@@ -230,7 +230,7 @@ fn run_asserts(
     mut start_events: EventReader<StartAsserting>,
     mut result_writer: EventWriter<TestQuitEvent>,
     time: Res<Time<Real>>,
-    asserter: Res<Asserter>,
+    asserter: Res<TestWrangler>,
     options: Res<PlaybackTestingOptions>,
     mut started: Local<Option<Timer>>,
 ) {

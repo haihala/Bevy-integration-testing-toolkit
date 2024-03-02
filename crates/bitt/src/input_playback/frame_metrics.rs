@@ -3,7 +3,7 @@ use std::{fs::File, path::PathBuf, time::Duration};
 use bevy::prelude::*;
 use serde::Serialize;
 
-use super::{artefact_paths::ArtefactPaths, FirstUpdate, TestQuitEvent};
+use super::{artefact_paths::ArtefactPaths, StartTime, TestQuitEvent};
 
 #[derive(Debug, Default, Resource)]
 struct FrameCollector(Vec<Duration>);
@@ -86,7 +86,7 @@ impl Plugin for FrameMetricPlugin {
 fn record_frame_metrics(
     mut frame_metrics: ResMut<FrameCollector>,
     time: Res<Time<Real>>,
-    first_update: Option<Res<FirstUpdate>>,
+    first_update: Option<Res<StartTime>>,
 ) {
     if first_update.is_some() {
         frame_metrics.0.push(time.delta());

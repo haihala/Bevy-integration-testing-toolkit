@@ -2,7 +2,7 @@ use std::env;
 
 use bevy::prelude::*;
 
-use bitt::{Asserter, HeadlessDefaultPlugins, PlaybackTestGear, PlaybackTestingOptions};
+use bitt::{HeadlessDefaultPlugins, PlaybackTestGear, PlaybackTestingOptions, TestWrangler};
 
 use star_demo::{DemoGamePlugin, Points};
 
@@ -22,6 +22,7 @@ fn main() {
             script,
             PlaybackTestingOptions {
                 read_only: env::var("CI").is_ok(),
+                manual_start: true,
                 ..default()
             },
         ),
@@ -33,8 +34,10 @@ fn main() {
     .run();
 }
 
-fn test_assert(score: Query<&Points>, mut asserter: ResMut<Asserter>) {
+fn test_assert(score: Query<&Points>, mut wrangler: ResMut<TestWrangler>) {
+    wrangler.start();
+
     if score.single().0 == 2 {
-        asserter.pass();
+        wrangler.pass();
     }
 }

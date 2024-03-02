@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bitt::{Asserter, PlaybackTestGear, PlaybackTestingOptions};
+use bitt::{PlaybackTestGear, PlaybackTestingOptions, TestWrangler};
 use clap::{Parser, ValueEnum};
 use click_demo::{ClickDemoPlugin, Points};
 
@@ -57,8 +57,8 @@ fn main() {
     app.run();
 }
 
-fn assert_score_of_three(score: Res<Points>, mut asserter: ResMut<Asserter>) {
+fn assert_score_of_three(score: Res<Points>, mut wrangler: ResMut<TestWrangler>) {
     if score.0 == 3 {
-        asserter.pass();
+        wrangler.pass();
     }
 }

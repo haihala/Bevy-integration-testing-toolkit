@@ -11,9 +11,9 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-use crate::Asserter;
+use crate::TestWrangler;
 
-use super::{FirstUpdate, TestScript, UserInput};
+use super::{StartTime, TestScript, UserInput};
 
 #[derive(Debug, Clone, Copy, Event)]
 struct SaveQuitEvent;
@@ -39,7 +39,7 @@ impl Plugin for RecordingPlugin {
 fn script_recorder(
     mut script: ResMut<TestScript>,
     time: Res<Time<Real>>,
-    first_update: Option<Res<FirstUpdate>>,
+    first_update: Option<Res<StartTime>>,
     input: Res<ButtonInput<KeyCode>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     pad_buttons: Res<ButtonInput<GamepadButton>>,
@@ -123,7 +123,7 @@ fn script_recorder(
 }
 
 fn recording_asserter(
-    asserter: ResMut<Asserter>,
+    asserter: ResMut<TestWrangler>,
     mut quit_events: EventWriter<SaveQuitEvent>,
     mut delay: Local<Option<Timer>>,
     time: Res<Time<Real>>,
@@ -141,7 +141,7 @@ fn save_script(
     script: Res<TestScript>,
     path: Res<ScriptPath>,
     time: Res<Time<Real>>,
-    first_update: Option<Res<FirstUpdate>>,
+    first_update: Option<Res<StartTime>>,
     mut quit_events: ResMut<Events<AppExit>>,
 ) {
     let Some(start_time) = first_update else {
