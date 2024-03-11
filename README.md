@@ -1,5 +1,7 @@
 # Bevy integration testing tool (Bitt)
 
+**Help needed**. BITT was in part made for my Master's thesis. Help me graduate by filling a short survey: https://forms.gle/PqY3uJwTakQahT228
+
 Tool for integration testing apps built in the bevy game engine.
 
 Bitt, (Noun) a pair of posts on the deck of a ship for fastening mooring lines or cables.
